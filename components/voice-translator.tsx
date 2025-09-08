@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { ClickableText } from "@/components/clickable-text"
+import { GrammarAnalysisDialog } from "@/components/grammar-analysis-dialog"
 import {
   Mic,
   MicOff,
@@ -21,6 +23,9 @@ import {
   Sparkles,
   Volume2,
   Languages,
+  BookOpen,
+  ArrowRight,
+  Brain,
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
@@ -37,6 +42,7 @@ interface OutputLanguage {
 }
 
 export function VoiceTranslator() {
+  const [showIntro, setShowIntro] = useState(true)
   const [inputText, setInputText] = useState("")
   const [inputLanguage, setInputLanguage] = useState("auto")
   const [outputLanguages, setOutputLanguages] = useState<OutputLanguage[]>([
@@ -494,458 +500,707 @@ export function VoiceTranslator() {
     }
   }
 
+  const handleContinue = () => {
+    setShowIntro(false)
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
-        <div className="text-center py-8 sm:py-12 mb-8 animate-fade-in">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-primary/10 rounded-2xl">
-              <Globe className="h-8 w-8 text-primary" />
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Voice Translator
-            </h1>
-          </div>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 text-balance">
-            Break language barriers instantly with AI-powered real-time speech translation
-          </p>
-
-          {/* Feature Highlights */}
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Real-time Translation</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
-              <Volume2 className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Voice Recognition</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
-              <Languages className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">25+ Languages</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Header Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4 animate-slide-up">
-          <div className="flex items-center gap-2">
-            <HistoryDialog />
-            <SettingsDialog />
-          </div>
-        </div>
-
-        {/* Error Alerts */}
-        {translationError && (
-          <Alert variant="destructive" className="mb-6 animate-scale-in">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{translationError}</AlertDescription>
-          </Alert>
-        )}
-
-        {speechError && (
-          <Alert variant="destructive" className="mb-6 animate-scale-in">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{speechError}</AlertDescription>
-          </Alert>
-        )}
-
-        {!isSpeechSupported && (
-          <Alert className="mb-6 animate-scale-in">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Speech recognition is not supported in this browser. Voice input will not be available.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {!isTTSSupported && (
-          <Alert className="mb-6 animate-scale-in">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Text-to-speech is not supported in this browser. Audio playback will not be available.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 animate-slide-up">
-          <Card className="p-6 lg:p-8 shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Mic className="h-5 w-5 text-primary" />
-                  </div>
-                  <h2 className="text-xl lg:text-2xl font-bold text-card-foreground">Input</h2>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {detectedLanguage && inputLanguage === "auto" && (
-                    <Badge variant="secondary" className="text-xs animate-scale-in">
-                      Detected: {languages.find((l) => l.code === detectedLanguage)?.name || detectedLanguage}
-                    </Badge>
-                  )}
-                  <Select value={inputLanguage} onValueChange={setInputLanguage}>
-                    <SelectTrigger className="w-full sm:w-44 bg-background/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {languages.map((lang) => (
-                        <SelectItem key={lang.code} value={lang.code}>
-                          {lang.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <Textarea
-                placeholder="Type or speak your text here..."
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                className="min-h-32 lg:min-h-40 resize-none text-base bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
-              />
-
-              <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border/50">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Smart Features
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="auto-translate"
-                      checked={autoTranslate}
-                      onChange={(e) => setAutoTranslate(e.target.checked)}
-                      className="rounded border-border accent-primary"
-                    />
-                    <label htmlFor="auto-translate" className="text-sm text-muted-foreground">
-                      Auto-translate as I speak
-                    </label>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="auto-play"
-                      checked={autoPlay}
-                      onChange={(e) => setAutoPlay(e.target.checked)}
-                      className="rounded border-border accent-primary"
-                    />
-                    <label htmlFor="auto-play" className="text-sm text-muted-foreground">
-                      Auto-play translated speech
-                    </label>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="grammar-correction"
-                      checked={grammarCorrectionEnabled}
-                      onChange={(e) => setGrammarCorrectionEnabled(e.target.checked)}
-                      className="rounded border-border accent-primary"
-                    />
-                    <label htmlFor="grammar-correction" className="text-sm text-muted-foreground">
-                      Auto-correct grammar & spelling
-                    </label>
-                  </div>
-
-                  <div className="flex items-center gap-3 sm:col-span-2">
-                    <input
-                      type="checkbox"
-                      id="streaming-mode"
-                      checked={streamingMode}
-                      onChange={(e) => setStreamingMode(e.target.checked)}
-                      className="rounded border-border accent-primary"
-                    />
-                    <label htmlFor="streaming-mode" className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" />
-                      Real-time streaming mode
-                    </label>
-                  </div>
-
-                  <div className="flex items-center gap-3 sm:col-span-2">
-                    <label htmlFor="speech-speed" className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Volume2 className="h-4 w-4 text-primary" />
-                      Speech Speed: {speechSpeed}x
-                    </label>
-                    <input
-                      type="range"
-                      id="speech-speed"
-                      min="0.5"
-                      max="2"
-                      step="0.1"
-                      value={speechSpeed}
-                      onChange={(e) => setSpeechSpeed(Number.parseFloat(e.target.value))}
-                      className="flex-1 accent-primary"
-                    />
-                  </div>
-                </div>
-              </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 relative overflow-hidden">
+      {showIntro && (
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-green-50 z-50 overflow-y-auto">
+          <div className="min-h-screen flex items-start justify-center p-4 py-8">
+            <div className="max-w-4xl mx-auto text-center space-y-8">
               <div className="space-y-4">
-                <Button
-                  onClick={toggleRecording}
-                  variant={isListening ? "destructive" : "default"}
-                  size="lg"
-                  className="w-full h-14 text-base font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                  disabled={!isSpeechSupported}
-                >
-                  {isListening ? (
-                    <>
-                      <MicOff className="h-5 w-5 mr-3" />
-                      Stop Recording
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-5 w-5 mr-3" />
-                      Start Recording
-                    </>
-                  )}
-                </Button>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full text-emerald-700 text-sm font-medium">
+                  <Mic className="w-4 h-4" />
+                  AI-Powered Voice Translation
+                </div>
+                <h1 className="text-5xl font-bold text-gray-900 text-balance">Real-Time Voice Translator</h1>
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto text-pretty">
+                  Break language barriers instantly with our advanced AI translator featuring speech recognition,
+                  grammar correction, and natural voice synthesis.
+                </p>
+              </div>
 
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleTranslate}
-                    disabled={!inputText.trim() || (isTranslating && !streamingMode) || isCorrectingGrammar}
-                    className="flex-1 h-12 font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    {isCorrectingGrammar ? (
-                      <>
-                        <div className="w-4 h-4 mr-2 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                        Correcting Grammar...
-                      </>
-                    ) : streamingMode ? (
-                      isStreaming ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                    <Mic className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Voice Recognition</h3>
+                  <p className="text-gray-600 text-sm">
+                    Real-time speech-to-text conversion with high accuracy across multiple languages
+                  </p>
+                </div>
+
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                    <Languages className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Multi-Language Support</h3>
+                  <p className="text-gray-600 text-sm">
+                    Support for 25+ languages including major Indian languages like Hindi, Tamil, Bengali
+                  </p>
+                </div>
+
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                    <Volume2 className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Natural Voice Synthesis</h3>
+                  <p className="text-gray-600 text-sm">
+                    High-quality text-to-speech with adjustable speed and natural pronunciation
+                  </p>
+                </div>
+
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                    <Zap className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Real-Time Streaming</h3>
+                  <p className="text-gray-600 text-sm">
+                    See translations appear word-by-word as you speak for instant communication
+                  </p>
+                </div>
+
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                    <BookOpen className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Grammar Correction</h3>
+                  <p className="text-gray-600 text-sm">
+                    AI-powered grammar and spelling correction before translation for better accuracy
+                  </p>
+                </div>
+
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
+                    <Brain className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Smart Analysis</h3>
+                  <p className="text-gray-600 text-sm">
+                    Grammatical analysis with parts of speech tagging and contextual word definitions
+                  </p>
+                </div>
+              </div>
+
+              <div
+                className="bg-gradient-to-r from-emerald-600 to-green-700 rounded-2xl p-8 mt-12"
+                style={{ backgroundColor: "#059669" }}
+              >
+                <h3 className="text-2xl font-bold mb-4" style={{ color: "#ffffff" }}>
+                  Advanced Features
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6 text-left">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <span style={{ color: "#ffffff" }}>Auto-translate as you speak</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <span style={{ color: "#ffffff" }}>Translation history with export</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <span style={{ color: "#ffffff" }}>Customizable voice settings</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <span style={{ color: "#ffffff" }}>Clickable word definitions</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <span style={{ color: "#ffffff" }}>Multiple output languages</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <span style={{ color: "#ffffff" }}>Responsive design for all devices</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-8">
+                <button
+                  onClick={handleContinue}
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  Get Started
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+                <p className="text-sm text-gray-500 mt-3">Start translating in seconds • No signup required</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!showIntro && (
+        <>
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">{/* Background Elements */}</div>
+
+          <div className="relative z-10 container mx-auto px-4 sm:px-6 max-w-7xl">
+            <div className="text-center py-8 sm:py-12 mb-8 animate-fade-in">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="p-3 bg-primary/10 rounded-2xl">
+                  <Globe className="h-8 w-8 text-primary" />
+                </div>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Voice Translator
+                </h1>
+              </div>
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 text-balance">
+                Break language barriers instantly with AI-powered real-time speech translation
+              </p>
+
+              <div className="flex flex-wrap justify-center gap-4 mb-8 animate-slide-up">
+                <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Real-time Translation</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
+                  <Volume2 className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Voice Recognition</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
+                  <Languages className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">25+ Languages</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4 animate-slide-up">
+              <div className="flex items-center gap-2">
+                <HistoryDialog />
+                <SettingsDialog />
+              </div>
+            </div>
+
+            {translationError && (
+              <Alert variant="destructive" className="mb-6 animate-scale-in">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{translationError}</AlertDescription>
+              </Alert>
+            )}
+
+            {speechError && (
+              <Alert variant="destructive" className="mb-6 animate-scale-in">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{speechError}</AlertDescription>
+              </Alert>
+            )}
+
+            {!isSpeechSupported && (
+              <Alert className="mb-6 animate-scale-in">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Speech recognition is not supported in this browser. Voice input will not be available.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!isTTSSupported && (
+              <Alert className="mb-6 animate-scale-in">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Text-to-speech is not supported in this browser. Audio playback will not be available.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 animate-slide-up">
+              <Card className="p-6 lg:p-8 shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Mic className="h-5 w-5 text-primary" />
+                      </div>
+                      <h2 className="text-xl lg:text-2xl font-bold text-card-foreground">Input</h2>
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {detectedLanguage && inputLanguage === "auto" && (
+                        <Badge variant="secondary" className="text-xs animate-scale-in">
+                          Detected: {languages.find((l) => l.code === detectedLanguage)?.name || detectedLanguage}
+                        </Badge>
+                      )}
+                      <Select value={inputLanguage} onValueChange={setInputLanguage}>
+                        <SelectTrigger className="w-full sm:w-44 bg-background/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {languages.map((lang) => (
+                            <SelectItem key={lang.code} value={lang.code}>
+                              {lang.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Textarea
+                    placeholder="Type or speak your text here..."
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    className="min-h-32 lg:min-h-40 resize-none text-base bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+                  />
+
+                  <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border/50">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Smart Features
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="auto-translate"
+                          checked={autoTranslate}
+                          onChange={(e) => setAutoTranslate(e.target.checked)}
+                          className="rounded border-border accent-primary"
+                        />
+                        <label htmlFor="auto-translate" className="text-sm text-muted-foreground">
+                          Auto-translate as I speak
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="auto-play"
+                          checked={autoPlay}
+                          onChange={(e) => setAutoPlay(e.target.checked)}
+                          className="rounded border-border accent-primary"
+                        />
+                        <label htmlFor="auto-play" className="text-sm text-muted-foreground">
+                          Auto-play translated speech
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="grammar-correction"
+                          checked={grammarCorrectionEnabled}
+                          onChange={(e) => setGrammarCorrectionEnabled(e.target.checked)}
+                          className="rounded border-border accent-primary"
+                        />
+                        <label htmlFor="grammar-correction" className="text-sm text-muted-foreground">
+                          Auto-correct grammar & spelling
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-3 sm:col-span-2">
+                        <input
+                          type="checkbox"
+                          id="streaming-mode"
+                          checked={streamingMode}
+                          onChange={(e) => setStreamingMode(e.target.checked)}
+                          className="rounded border-border accent-primary"
+                        />
+                        <label
+                          htmlFor="streaming-mode"
+                          className="text-sm text-muted-foreground flex items-center gap-2"
+                        >
+                          <Zap className="h-4 w-4 text-primary" />
+                          Real-time streaming mode
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-3 sm:col-span-2">
+                        <label htmlFor="speech-speed" className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Volume2 className="h-4 w-4 text-primary" />
+                          Speech Speed:
+                        </label>
+                        <input
+                          type="range"
+                          id="speech-speed"
+                          min="0.5"
+                          max="2"
+                          step="0.1"
+                          value={speechSpeed}
+                          onChange={(e) => setSpeechSpeed(Number.parseFloat(e.target.value))}
+                          className="flex-1 accent-primary"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Button
+                      onClick={toggleRecording}
+                      variant={isListening ? "destructive" : "default"}
+                      size="lg"
+                      className="w-full h-14 text-base font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                      disabled={!isSpeechSupported}
+                    >
+                      {isListening ? (
                         <>
-                          <Square className="h-4 w-4 mr-2" />
-                          Stop Stream
+                          <MicOff className="h-5 w-5 mr-3" />
+                          Stop Recording
                         </>
                       ) : (
                         <>
-                          <Zap className="h-4 w-4 mr-2" />
-                          Start Stream
+                          <Mic className="h-5 w-5 mr-3" />
+                          Start Recording
                         </>
-                      )
-                    ) : isTranslating ? (
-                      <>
-                        <div className="w-4 h-4 mr-2 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                        Translating...
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="h-4 w-4 mr-2" />
-                        Translate
-                      </>
-                    )}
-                  </Button>
+                      )}
+                    </Button>
 
-                  <Button
-                    onClick={resetAll}
-                    variant="outline"
-                    className="px-6 h-12 font-semibold bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                    title="Reset all inputs and outputs"
-                  >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Reset
-                  </Button>
-                </div>
-              </div>
-
-              {isListening && (
-                <div className="space-y-3 p-4 bg-primary/5 border border-primary/20 rounded-lg animate-scale-in">
-                  <div className="flex items-center gap-3 text-sm font-medium text-primary">
-                    <div className="relative">
-                      <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
-                      <div className="absolute inset-0 w-3 h-3 bg-primary rounded-full animate-ping opacity-75" />
-                    </div>
-                    Listening for speech...
-                  </div>
-                  {interimTranscript && (
-                    <div className="text-sm text-muted-foreground italic p-3 bg-background/50 rounded border border-border/50">
-                      "{interimTranscript}"
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </Card>
-
-          <Card className="p-6 lg:p-8 shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-secondary/10 rounded-lg">
-                    <Languages className="h-5 w-5 text-secondary" />
-                  </div>
-                  <h2 className="text-xl lg:text-2xl font-bold text-card-foreground">Output</h2>
-                </div>
-                <Button
-                  onClick={addOutputLanguage}
-                  variant="outline"
-                  size="sm"
-                  className="self-start sm:self-auto bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Language
-                </Button>
-              </div>
-
-              <div className="space-y-4 max-h-96 lg:max-h-[32rem] overflow-y-auto">
-                {outputLanguages.map((output, index) => (
-                  <Card
-                    key={index}
-                    className="p-4 lg:p-5 bg-background/30 border border-border/50 hover:bg-background/50 transition-all duration-200 animate-slide-up"
-                  >
-                    <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <Select value={output.code} onValueChange={(value) => updateOutputLanguage(index, value)}>
-                          <SelectTrigger className="w-full sm:w-36 bg-background/50">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {languages
-                              .filter((lang) => lang.code !== "auto")
-                              .map((lang) => (
-                                <SelectItem key={lang.code} value={lang.code}>
-                                  {lang.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-
-                        <div className="flex items-center gap-2 self-start sm:self-auto">
-                          {isStreaming && streamingResults[output.code] && (
-                            <Badge variant="secondary" className="text-xs animate-scale-in">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                                Streaming
-                              </div>
-                            </Badge>
-                          )}
-                          <Button
-                            onClick={() => removeOutputLanguage(index)}
-                            variant="ghost"
-                            size="sm"
-                            className="hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="min-h-20 lg:min-h-24 p-4 bg-background/70 rounded-lg border border-border/50 text-sm lg:text-base">
-                        {output.text || (
-                          <span className="text-muted-foreground italic">Translation will appear here...</span>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Button
-                          onClick={() => playAudio(output.text, output.code, index)}
-                          variant="outline"
-                          size="sm"
-                          disabled={!output.text || !isTTSSupported}
-                          className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
-                        >
-                          {currentPlayingIndex === index && isSpeaking ? (
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={handleTranslate}
+                        disabled={!inputText.trim() || (isTranslating && !streamingMode) || isCorrectingGrammar}
+                        className="flex-1 h-12 font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        {isCorrectingGrammar ? (
+                          <>
+                            <div className="w-4 h-4 mr-2 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                            Correcting Grammar...
+                          </>
+                        ) : streamingMode ? (
+                          isStreaming ? (
                             <>
                               <Square className="h-4 w-4 mr-2" />
-                              Stop
+                              Stop Stream
                             </>
                           ) : (
                             <>
-                              <Play className="h-4 w-4 mr-2" />
-                              Play
+                              <Zap className="h-4 w-4 mr-2" />
+                              Start Stream
                             </>
-                          )}
-                        </Button>
-                        <Button
-                          onClick={() => copyToClipboard(output.text)}
-                          variant="outline"
-                          size="sm"
-                          disabled={!output.text}
-                          className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
-                        >
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copy
-                        </Button>
+                          )
+                        ) : isTranslating ? (
+                          <>
+                            <div className="w-4 h-4 mr-2 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                            Translating...
+                          </>
+                        ) : (
+                          <>
+                            <Globe className="h-4 w-4 mr-2" />
+                            Translate
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        onClick={resetAll}
+                        variant="outline"
+                        className="px-6 h-12 font-semibold bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                        title="Reset all inputs and outputs"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Reset
+                      </Button>
+                    </div>
+                  </div>
+
+                  {isListening && (
+                    <div className="space-y-3 p-4 bg-primary/5 border border-primary/20 rounded-lg animate-scale-in">
+                      <div className="flex items-center gap-3 text-sm font-medium text-primary">
+                        <div className="relative">
+                          <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
+                          <div className="absolute inset-0 w-3 h-3 bg-primary rounded-full animate-ping opacity-75" />
+                        </div>
+                        Listening for speech...
+                      </div>
+                      {interimTranscript && (
+                        <div className="text-sm text-muted-foreground italic p-3 bg-background/50 rounded border border-border/50">
+                          "{interimTranscript}"
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              <Card className="p-6 lg:p-8 shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-secondary/10 rounded-lg">
+                        <Languages className="h-5 w-5 text-secondary" />
+                      </div>
+                      <h2 className="text-xl lg:text-2xl font-bold text-card-foreground">Output</h2>
+                    </div>
+                    <Button
+                      onClick={addOutputLanguage}
+                      variant="outline"
+                      size="sm"
+                      className="self-start sm:self-auto bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Language
+                    </Button>
+                  </div>
+
+                  <div className="space-y-4 max-h-96 lg:max-h-[32rem] overflow-y-auto">
+                    {outputLanguages.map((output, index) => (
+                      <Card
+                        key={index}
+                        className="p-4 lg:p-5 bg-background/30 border border-border/50 hover:bg-background/50 transition-all duration-200 animate-slide-up"
+                      >
+                        <div className="space-y-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <Select value={output.code} onValueChange={(value) => updateOutputLanguage(index, value)}>
+                              <SelectTrigger className="w-full sm:w-36 bg-background/50">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {languages
+                                  .filter((lang) => lang.code !== "auto")
+                                  .map((lang) => (
+                                    <SelectItem key={lang.code} value={lang.code}>
+                                      {lang.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+
+                            <div className="flex items-center gap-2 self-start sm:self-auto">
+                              {isStreaming && streamingResults[output.code] && (
+                                <Badge variant="secondary" className="text-xs animate-scale-in">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                                    Streaming
+                                  </div>
+                                </Badge>
+                              )}
+                              <Button
+                                onClick={() => removeOutputLanguage(index)}
+                                variant="ghost"
+                                size="sm"
+                                className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="min-h-20 lg:min-h-24 p-4 bg-background/70 rounded-lg border border-border/50 text-sm lg:text-base">
+                            {output.text ? (
+                              <ClickableText text={output.text} language={output.name} className="leading-relaxed" />
+                            ) : (
+                              <span className="text-muted-foreground italic">Translation will appear here...</span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Button
+                              onClick={() => playAudio(output.text, output.code, index)}
+                              variant="outline"
+                              size="sm"
+                              disabled={!output.text || !isTTSSupported}
+                              className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
+                            >
+                              {currentPlayingIndex === index && isSpeaking ? (
+                                <>
+                                  <Square className="h-4 w-4 mr-2" />
+                                  Stop
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="h-4 w-4 mr-2" />
+                                  Play
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              onClick={() => copyToClipboard(output.text)}
+                              variant="outline"
+                              size="sm"
+                              disabled={!output.text}
+                              className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
+                            >
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copy
+                            </Button>
+                            <GrammarAnalysisDialog text={output.text} language={output.name}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={!output.text}
+                                className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
+                              >
+                                <BookOpen className="h-4 w-4 mr-2" />
+                                Grammar
+                              </Button>
+                            </GrammarAnalysisDialog>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {outputLanguages.length === 0 && (
+                    <div className="text-center py-8 lg:py-12 text-muted-foreground animate-fade-in">
+                      <div className="p-4 bg-muted/30 rounded-2xl inline-block mb-4">
+                        <Languages className="h-12 w-12 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-base lg:text-lg mb-4">No output languages selected</p>
+                      <Button
+                        onClick={addOutputLanguage}
+                        variant="outline"
+                        className="bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add your first language
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            {(isTranslating || isSpeaking || isStreaming || isCorrectingGrammar) && (
+              <div className="fixed bottom-6 right-6 z-50 animate-scale-in">
+                <Badge
+                  variant="secondary"
+                  className="px-4 py-3 shadow-lg bg-card/90 backdrop-blur-sm border border-border/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                      <div className="absolute inset-0 w-2 h-2 bg-primary rounded-full animate-ping opacity-75" />
+                    </div>
+                    <span className="text-sm font-medium">
+                      {isCorrectingGrammar
+                        ? "Correcting grammar..."
+                        : isStreaming
+                          ? "Streaming translation..."
+                          : isTranslating
+                            ? "Translating..."
+                            : "Speaking..."}
+                    </span>
+                  </div>
+                </Badge>
+              </div>
+            )}
+
+            <div className="mt-12 mb-8 animate-fade-in">
+              <Card className="p-6 lg:p-8 bg-card/50 border-0">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Quick Tips
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                    <p>Click the microphone to start voice input and speak clearly for best results</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                    <p>Enable auto-translate to get instant translations as you speak</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                    <p>Use streaming mode for real-time word-by-word translation</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            <footer className="mt-16 mb-8">
+              <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-secondary/10 to-accent/5 rounded-3xl border border-primary/20 shadow-2xl backdrop-blur-sm">
+                <div className="absolute inset-0 gradient-mesh opacity-10" />
+                <div className="absolute top-0 left-1/4 w-32 h-32 bg-primary/20 rounded-full blur-3xl animate-float" />
+                <div
+                  className="absolute bottom-0 right-1/4 w-24 h-24 bg-secondary/20 rounded-full blur-2xl animate-float"
+                  style={{ animationDelay: "1s" }}
+                />
+
+                <div className="relative py-8 px-6">
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center gap-3 mb-4">
+                      <div className="p-3 bg-primary/10 rounded-2xl animate-glow">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                      </div>
+                      <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        Voice Translator Team
+                      </h3>
+                    </div>
+                    <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+                      Connecting cultures and breaking language barriers with cutting-edge AI technology
+                    </p>
+                  </div>
+
+                  <div className="relative mb-8">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent rounded-xl" />
+                    <div className="marquee-container group py-4 px-2">
+                      <div className="marquee-content">
+                        <span className="text-sm font-medium tracking-wide flex items-center gap-6">
+                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
+                            <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                            <span className="text-primary font-semibold">Lead Developer:</span>
+                            <span className="text-foreground">Anwar Patel</span>
+                          </span>
+                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-secondary/10 rounded-full border border-secondary/20">
+                            <span className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
+                            <span className="text-secondary font-semibold">Core Contributors:</span>
+                            <span className="text-foreground">Goussoddin • Pooja Pasarge • Shreya Reddy</span>
+                          </span>
+                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full border border-accent/20">
+                            <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                            <span className="text-accent font-semibold">Special Thanks:</span>
+                            <span className="text-foreground">Open Source Community</span>
+                          </span>
+                        </span>
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
-
-              {outputLanguages.length === 0 && (
-                <div className="text-center py-8 lg:py-12 text-muted-foreground animate-fade-in">
-                  <div className="p-4 bg-muted/30 rounded-2xl inline-block mb-4">
-                    <Languages className="h-12 w-12 text-muted-foreground/50" />
                   </div>
-                  <p className="text-base lg:text-lg mb-4">No output languages selected</p>
-                  <Button
-                    onClick={addOutputLanguage}
-                    variant="outline"
-                    className="bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add your first language
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
 
-        {(isTranslating || isSpeaking || isStreaming || isCorrectingGrammar) && (
-          <div className="fixed bottom-6 right-6 z-50 animate-scale-in">
-            <Badge
-              variant="secondary"
-              className="px-4 py-3 shadow-lg bg-card/90 backdrop-blur-sm border border-border/50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  <div className="absolute inset-0 w-2 h-2 bg-primary rounded-full animate-ping opacity-75" />
+                  <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pt-6 border-t border-primary/10">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                          <Globe className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="font-medium">© 2024 Voice Translator</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="w-1 h-1 bg-muted-foreground rounded-full" />
+                        <span className="hover:text-primary transition-colors cursor-pointer">Open Source</span>
+                        <span className="w-1 h-1 bg-muted-foreground rounded-full" />
+                        <span className="hover:text-primary transition-colors cursor-pointer">MIT License</span>
+                        <span className="w-1 h-1 bg-muted-foreground rounded-full" />
+                        <span className="hover:text-primary transition-colors cursor-pointer">Privacy</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant="outline"
+                        className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <Globe className="h-3 w-3 mr-1" />
+                        25+ Languages
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-secondary/5 border-secondary/20 text-secondary hover:bg-secondary/10 transition-colors"
+                      >
+                        <Zap className="h-3 w-3 mr-1" />
+                        Real-time AI
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-accent/5 border-accent/20 text-accent hover:bg-accent/10 transition-colors"
+                      >
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Grammar Check
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-sm font-medium">
-                  {isCorrectingGrammar
-                    ? "Correcting grammar..."
-                    : isStreaming
-                      ? "Streaming translation..."
-                      : isTranslating
-                        ? "Translating..."
-                        : "Speaking..."}
-                </span>
               </div>
-            </Badge>
+            </footer>
           </div>
-        )}
-
-        <div className="mt-12 mb-8 animate-fade-in">
-          <Card className="p-6 lg:p-8 bg-card/50 border-0">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Quick Tips
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                <p>Click the microphone to start voice input and speak clearly for best results</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                <p>Enable auto-translate to get instant translations as you speak</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                <p>Use streaming mode for real-time word-by-word translation</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   )
 }
