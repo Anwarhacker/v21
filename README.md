@@ -6,26 +6,29 @@ A sophisticated web application that provides real-time voice translation capabi
 
 ### Core Translation Features
 - **Real-time Speech Recognition** - Convert speech to text using Web Speech API
+- **Grammar Correction** - Automatic grammar, spelling, and punctuation correction before translation
 - **AI-Powered Translation** - Translate text using Google Gemini 2.0 Flash model
-- **Text-to-Speech Output** - Convert translated text back to speech
+- **Text-to-Speech Output** - Convert translated text back to speech with speed controls
 - **Multi-language Support** - Support for 25+ languages including major Indian languages
 - **Streaming Translation** - Real-time word-by-word translation updates
 - **Auto-translate Mode** - Automatic translation as you speak
 
 ### User Interface Features
-- **Responsive Design** - Optimized for all screen sizes (mobile, tablet, desktop)
+- **Modern Responsive Design** - Optimized for all screen sizes with contemporary UI patterns
 - **Dark/Light Mode** - Automatic theme switching based on system preferences
-- **Modern UI** - Clean, professional interface with emerald color scheme
+- **Enhanced Visual Design** - Clean interface with green gradient theme and micro-interactions
 - **Accessibility** - Screen reader support and keyboard navigation
-- **Visual Feedback** - Real-time status indicators and progress feedback
+- **Visual Feedback** - Real-time status indicators, animations, and progress feedback
+- **Speed Controls** - Adjustable playback speed from 0.5x to 2x for audio output
 
 ### Advanced Features
-- **Translation History** - Local storage of all translation sessions
-- **Export Functionality** - Export translation history as JSON
-- **Customizable Settings** - Adjust TTS voice, rate, pitch, and volume
+- **Translation History** - Local storage of all translation sessions with timestamps
+- **Export Functionality** - Export translation history as JSON files
+- **Comprehensive Settings** - Adjust TTS voice, rate, pitch, volume, and grammar correction
 - **Multiple Output Languages** - Translate to multiple languages simultaneously
 - **Copy to Clipboard** - Easy copying of translated text
 - **Reset Functionality** - Quick reset of all inputs and outputs
+- **Grammar Toggle** - Enable/disable automatic grammar correction
 
 ## 🛠 Technologies Used
 
@@ -35,21 +38,17 @@ A sophisticated web application that provides real-time voice translation capabi
 - **TypeScript** - Type-safe JavaScript development
 
 ### Styling & UI
-- **Tailwind CSS v4** - Utility-first CSS framework
+- **Tailwind CSS v4** - Utility-first CSS framework with custom design tokens
 - **shadcn/ui** - High-quality React component library
 - **Lucide React** - Beautiful icon library
 - **Geist Font** - Modern typography (Sans & Mono)
+- **CSS Animations** - Smooth transitions and micro-interactions
 
 ### APIs & Services
-- **Google Gemini 2.0 Flash** - AI-powered translation service
+- **Google Gemini 2.0 Flash** - AI-powered translation and grammar correction
 - **Web Speech API** - Browser-based speech recognition
-- **Speech Synthesis API** - Browser-based text-to-speech
+- **Speech Synthesis API** - Browser-based text-to-speech with speed controls
 - **Server-Sent Events (SSE)** - Real-time streaming updates
-
-### Development Tools
-- **ESLint** - Code linting and formatting
-- **Vercel Analytics** - Performance monitoring
-- **Custom React Hooks** - Reusable logic components
 
 ## 📁 File Structure
 
@@ -57,11 +56,13 @@ A sophisticated web application that provides real-time voice translation capabi
 voice-translator/
 ├── app/
 │   ├── api/
+│   │   ├── correct-grammar/
+│   │   │   └── route.ts              # Grammar correction API endpoint
 │   │   └── translate/
 │   │       ├── route.ts              # Main translation API endpoint
 │   │       └── stream/
 │   │           └── route.ts          # Streaming translation API
-│   ├── globals.css                   # Global styles and theme tokens
+│   ├── globals.css                   # Global styles with modern design tokens
 │   ├── layout.tsx                    # Root layout with fonts and analytics
 │   └── page.tsx                      # Main page component
 ├── components/
@@ -70,14 +71,16 @@ voice-translator/
 │   │   ├── card.tsx
 │   │   ├── dialog.tsx
 │   │   ├── select.tsx
+│   │   ├── slider.tsx               # Speed control slider
+│   │   ├── switch.tsx               # Grammar toggle switch
 │   │   ├── textarea.tsx
 │   │   └── ...
-│   ├── voice-translator.tsx         # Main translator component
-│   ├── settings-dialog.tsx          # Settings configuration modal
+│   ├── voice-translator.tsx         # Main translator component with modern UI
+│   ├── settings-dialog.tsx          # Enhanced settings with grammar options
 │   └── history-dialog.tsx           # Translation history modal
 ├── hooks/
 │   ├── use-speech-recognition.ts    # Speech recognition hook
-│   ├── use-text-to-speech.ts       # Text-to-speech hook
+│   ├── use-text-to-speech.ts       # Enhanced TTS hook with speed controls
 │   ├── use-streaming-translation.ts # Streaming translation hook
 │   ├── use-translation-history.ts   # History management hook
 │   ├── use-mobile.ts               # Mobile detection hook
@@ -143,28 +146,53 @@ voice-translator/
 ### 1. Speech Input
 - User clicks microphone button to start recording
 - Web Speech API converts speech to text in real-time
-- Interim results are displayed as user speaks
+- Interim results are displayed as user speaks with visual feedback
 - Final transcript is captured when user stops speaking
 
-### 2. Translation Process
-- Text is sent to Gemini API via `/api/translate` endpoint
-- AI processes the text and returns translations
+### 2. Grammar Correction (Optional)
+- If enabled, text is first sent to `/api/correct-grammar` endpoint
+- Gemini AI corrects grammar, spelling, and punctuation
+- Corrected text is displayed with visual indication
+- Users can toggle this feature on/off in settings
+
+### 3. Translation Process
+- Corrected (or original) text is sent to Gemini API via `/api/translate` endpoint
+- AI processes the text and returns translations for all target languages
 - Multiple target languages can be processed simultaneously
-- Streaming mode provides word-by-word updates via SSE
+- Streaming mode provides word-by-word updates via Server-Sent Events
 
-### 3. Audio Output
+### 4. Audio Output
 - Translated text is converted to speech using Speech Synthesis API
-- Users can select different voices and adjust speech parameters
+- Users can adjust playback speed from 0.5x to 2x using slider controls
+- Voice selection and speech parameters are configurable in settings
 - Auto-play option available for immediate audio feedback
-- Manual playback controls for each translation
+- Manual playback controls for each translation with visual feedback
 
-### 4. Data Management
-- All translations are automatically saved to localStorage
-- History includes timestamps, source text, and all translations
-- Users can export history as JSON files
-- Settings are persisted across browser sessions
+### 5. Data Management
+- All translations are automatically saved to localStorage with timestamps
+- History includes source text, corrected text, and all translations
+- Users can export complete history as JSON files
+- Settings and preferences are persisted across browser sessions
 
 ## 🎛 API Endpoints
+
+### POST `/api/correct-grammar`
+Corrects grammar, spelling, and punctuation in the input text.
+
+**Request Body:**
+\`\`\`json
+{
+  "text": "hello world how are you doing today"
+}
+\`\`\`
+
+**Response:**
+\`\`\`json
+{
+  "correctedText": "Hello world! How are you doing today?",
+  "corrections": ["Added capitalization", "Added punctuation"]
+}
+\`\`\`
 
 ### POST `/api/translate`
 Translates text to specified target languages.
@@ -172,7 +200,7 @@ Translates text to specified target languages.
 **Request Body:**
 \`\`\`json
 {
-  "text": "Hello world",
+  "text": "Hello world! How are you doing today?",
   "targetLanguages": ["es", "fr", "hi"],
   "sourceLanguage": "en"
 }
@@ -182,9 +210,9 @@ Translates text to specified target languages.
 \`\`\`json
 {
   "translations": {
-    "es": "Hola mundo",
-    "fr": "Bonjour le monde",
-    "hi": "नमस्ते दुनिया"
+    "es": "¡Hola mundo! ¿Cómo estás hoy?",
+    "fr": "Bonjour le monde! Comment allez-vous aujourd'hui?",
+    "hi": "नमस्ते दुनिया! आज आप कैसे हैं?"
   },
   "detectedLanguage": "en"
 }
@@ -193,95 +221,87 @@ Translates text to specified target languages.
 ### POST `/api/translate/stream`
 Provides streaming translation updates via Server-Sent Events.
 
-**Request Body:** Same as above
+**Request Body:** Same as `/api/translate`
 
 **Response:** SSE stream with progressive translation updates
 
 ## 🎨 Design System
 
 ### Color Palette
-- **Primary:** Emerald green (`oklch(0.45 0.15 162.4)`)
-- **Secondary:** Lighter emerald (`oklch(0.55 0.15 162.4)`)
-- **Background:** Clean white/dark gray
-- **Accent:** Complementary emerald tones
+- **Primary:** Modern green (`oklch(0.45 0.15 162.4)`)
+- **Secondary:** Lighter green variants
+- **Background:** Clean gradients and glass morphism effects
+- **Accent:** Complementary green tones with subtle animations
 
 ### Typography
-- **Headings:** Geist Sans (various weights)
-- **Body:** Geist Sans (regular)
-- **Code:** Geist Mono
+- **Headings:** Geist Sans with improved hierarchy
+- **Body:** Geist Sans with optimized line heights
+- **Code:** Geist Mono for technical content
 
 ### Layout Principles
-- Mobile-first responsive design
-- Flexbox-based layouts
-- Consistent spacing using Tailwind's gap system
+- Mobile-first responsive design with enhanced breakpoints
+- Flexbox-based layouts with improved spacing
+- Card-based components with subtle shadows and backdrop blur
+- Smooth animations and micro-interactions
 - Semantic HTML structure for accessibility
+
+### Interactive Elements
+- Hover animations on buttons and cards
+- Loading states with skeleton animations
+- Progress indicators for ongoing operations
+- Visual feedback for all user interactions
 
 ## 🔧 Configuration
 
-### Environment Variables
-The application uses a hardcoded Gemini API key. For production deployment, consider using environment variables:
-
-\`\`\`env
-GEMINI_API_KEY=your_api_key_here
-\`\`\`
+### Grammar Correction Settings
+- Toggle grammar correction on/off
+- Automatic correction before translation
+- Visual indication of corrections made
 
 ### Speech Recognition Settings
 - Language detection: Automatic
 - Continuous recognition: Enabled
 - Interim results: Enabled for real-time feedback
+- Enhanced error handling and recovery
 
 ### Text-to-Speech Settings
-- Configurable voice selection
-- Adjustable rate (0.5x to 2x speed)
-- Adjustable pitch (0.5 to 2.0)
-- Adjustable volume (0 to 1.0)
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Push code to GitHub repository
-2. Connect repository to Vercel
-3. Deploy automatically with zero configuration
-4. Set environment variables in Vercel dashboard
-
-### Other Platforms
-The application can be deployed to any platform supporting Next.js:
-- Netlify
-- AWS Amplify
-- Railway
-- DigitalOcean App Platform
+- Configurable voice selection by language
+- Adjustable playback speed (0.5x to 2x)
+- Adjustable rate, pitch, and volume
+- Auto-play options for translated content
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-**Microphone not working:**
-- Ensure HTTPS connection (required for Web Speech API)
-- Grant microphone permissions in browser
-- Check browser compatibility
+**Grammar correction not working:**
+- Verify API key has access to Gemini models
+- Check network connection and API quotas
+- Ensure input text is not empty
 
-**Translation errors:**
-- Verify API key is valid and has sufficient quota
-- Check network connection
-- Ensure target language is supported
+**Speed controls not responding:**
+- Check browser's Speech Synthesis API support
+- Verify audio output device is connected
+- Try different playback speeds to test functionality
 
-**Audio playback issues:**
-- Check browser's autoplay policies
-- Ensure speakers/headphones are connected
-- Verify Speech Synthesis API support
+**Translation errors with Indian languages:**
+- Ensure proper language codes are used
+- Check API support for specific Indian languages
+- Verify text encoding for non-Latin scripts
 
 ### Browser Compatibility
-- **Chrome/Edge:** Full support for all features
-- **Firefox:** Limited Speech Recognition support
-- **Safari:** Partial support, may require user interaction for audio
+- **Chrome/Edge:** Full support for all features including speed controls
+- **Firefox:** Limited Speech Recognition support, TTS speed may vary
+- **Safari:** Partial support, may require user interaction for audio and speed controls
 
 ## 📈 Performance Optimization
 
-- **Debounced API calls** - Prevents excessive translation requests
-- **Streaming responses** - Reduces perceived latency
-- **Local storage** - Offline access to translation history
-- **Lazy loading** - Components loaded on demand
-- **Optimized bundle** - Tree-shaking and code splitting
+- **Enhanced debouncing** - Prevents excessive API calls for grammar correction and translation
+- **Streaming responses** - Reduces perceived latency with real-time updates
+- **Optimized state management** - Efficient React state updates and re-renders
+- **Local storage optimization** - Compressed history storage
+- **Lazy loading** - Components and features loaded on demand
+- **Bundle optimization** - Tree-shaking and code splitting for faster loads
 
 ## 🤝 Contributing
 
