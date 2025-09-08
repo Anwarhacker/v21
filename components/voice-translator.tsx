@@ -51,6 +51,9 @@ export function VoiceTranslator() {
   const [autoPlay, setAutoPlay] = useState(false)
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null)
   const [streamingMode, setStreamingMode] = useState(false)
+  const [isCorrectingGrammar, setIsCorrectingGrammar] = useState(false)
+  const [grammarCorrectionEnabled, setGrammarCorrectionEnabled] = useState(true)
+  const [speechSpeed, setSpeechSpeed] = useState(1)
 
   const languages = [
     { code: "auto", name: "Auto-detect" },
@@ -131,9 +134,10 @@ export function VoiceTranslator() {
     isSpeaking,
     speak,
     stop: stopSpeaking,
+    setRate,
     error: ttsError,
   } = useTextToSpeech({
-    rate: 1,
+    rate: speechSpeed, // Use dynamic speech speed
     pitch: 1,
     volume: 1,
     onStart: () => {
@@ -252,7 +256,7 @@ export function VoiceTranslator() {
     }
   }
 
-  const startStreamingTranslation = () => {
+  const startStreamingTranslation = async () => {
     if (!inputText.trim()) {
       console.log("[v0] No input text for streaming translation")
       return
@@ -261,11 +265,20 @@ export function VoiceTranslator() {
     console.log("[v0] Starting streaming translation:", { inputText, inputLanguage, outputLanguages })
     setTranslationError(null)
 
+    let textToTranslate = inputText
+    if (grammarCorrectionEnabled) {
+      textToTranslate = await correctGrammar(inputText)
+      // Update input text with corrected version
+      if (textToTranslate !== inputText) {
+        setInputText(textToTranslate)
+      }
+    }
+
     // Clear existing translations
     setOutputLanguages((prev) => prev.map((output) => ({ ...output, text: "" })))
 
     startStreaming(
-      inputText,
+      textToTranslate, // Use corrected text
       inputLanguage,
       outputLanguages.map((lang) => lang.code),
     )
@@ -282,13 +295,22 @@ export function VoiceTranslator() {
     setTranslationError(null)
 
     try {
+      let textToTranslate = inputText
+      if (grammarCorrectionEnabled) {
+        textToTranslate = await correctGrammar(inputText)
+        // Update input text with corrected version
+        if (textToTranslate !== inputText) {
+          setInputText(textToTranslate)
+        }
+      }
+
       const response = await fetch("/api/translate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: inputText,
+          text: textToTranslate, // Use corrected text
           inputLang: inputLanguage,
           outputLangs: outputLanguages.map((lang) => lang.code),
           stream: false,
@@ -344,7 +366,7 @@ export function VoiceTranslator() {
       return
     }
 
-    console.log("[v0] Playing audio:", { text, languageCode, index })
+    console.log("[v0] Playing audio:", { text, languageCode, index, speechSpeed })
 
     if (!isTTSSupported) {
       const errorMsg = "Text-to-speech is not supported in this browser."
@@ -364,6 +386,7 @@ export function VoiceTranslator() {
     }
 
     setCurrentPlayingIndex(index ?? null)
+    setRate(speechSpeed)
     speak(text, languageCode)
   }
 
@@ -430,6 +453,45 @@ export function VoiceTranslator() {
     setCurrentPlayingIndex(null)
     setIsTranslating(false)
     console.log("[v0] Reset complete")
+  }
+
+  const correctGrammar = async (text: string): Promise<string> => {
+    if (!grammarCorrectionEnabled || !text.trim()) {
+      return text
+    }
+
+    console.log("[v0] Starting grammar correction:", { text })
+    setIsCorrectingGrammar(true)
+
+    try {
+      const response = await fetch("/api/correct-grammar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text }),
+      })
+
+      const data = await response.json()
+      console.log("[v0] Grammar correction response:", data)
+
+      if (!response.ok) {
+        throw new Error(data.error || "Grammar correction failed")
+      }
+
+      if (data.success && data.correctedText) {
+        console.log("[v0] Grammar corrected:", { original: text, corrected: data.correctedText })
+        return data.correctedText
+      }
+
+      return text
+    } catch (error) {
+      console.error("[v0] Grammar correction error:", error)
+      // Return original text if correction fails
+      return text
+    } finally {
+      setIsCorrectingGrammar(false)
+    }
   }
 
   return (
@@ -577,6 +639,19 @@ export function VoiceTranslator() {
                     </label>
                   </div>
 
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="grammar-correction"
+                      checked={grammarCorrectionEnabled}
+                      onChange={(e) => setGrammarCorrectionEnabled(e.target.checked)}
+                      className="rounded border-border accent-primary"
+                    />
+                    <label htmlFor="grammar-correction" className="text-sm text-muted-foreground">
+                      Auto-correct grammar & spelling
+                    </label>
+                  </div>
+
                   <div className="flex items-center gap-3 sm:col-span-2">
                     <input
                       type="checkbox"
@@ -589,6 +664,23 @@ export function VoiceTranslator() {
                       <Zap className="h-4 w-4 text-primary" />
                       Real-time streaming mode
                     </label>
+                  </div>
+
+                  <div className="flex items-center gap-3 sm:col-span-2">
+                    <label htmlFor="speech-speed" className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Volume2 className="h-4 w-4 text-primary" />
+                      Speech Speed: {speechSpeed}x
+                    </label>
+                    <input
+                      type="range"
+                      id="speech-speed"
+                      min="0.5"
+                      max="2"
+                      step="0.1"
+                      value={speechSpeed}
+                      onChange={(e) => setSpeechSpeed(Number.parseFloat(e.target.value))}
+                      className="flex-1 accent-primary"
+                    />
                   </div>
                 </div>
               </div>
@@ -617,10 +709,15 @@ export function VoiceTranslator() {
                 <div className="flex gap-3">
                   <Button
                     onClick={handleTranslate}
-                    disabled={!inputText.trim() || (isTranslating && !streamingMode)}
+                    disabled={!inputText.trim() || (isTranslating && !streamingMode) || isCorrectingGrammar}
                     className="flex-1 h-12 font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    {streamingMode ? (
+                    {isCorrectingGrammar ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                        Correcting Grammar...
+                      </>
+                    ) : streamingMode ? (
                       isStreaming ? (
                         <>
                           <Square className="h-4 w-4 mr-2" />
@@ -801,7 +898,7 @@ export function VoiceTranslator() {
           </Card>
         </div>
 
-        {(isTranslating || isSpeaking || isStreaming) && (
+        {(isTranslating || isSpeaking || isStreaming || isCorrectingGrammar) && (
           <div className="fixed bottom-6 right-6 z-50 animate-scale-in">
             <Badge
               variant="secondary"
@@ -813,7 +910,13 @@ export function VoiceTranslator() {
                   <div className="absolute inset-0 w-2 h-2 bg-primary rounded-full animate-ping opacity-75" />
                 </div>
                 <span className="text-sm font-medium">
-                  {isStreaming ? "Streaming translation..." : isTranslating ? "Translating..." : "Speaking..."}
+                  {isCorrectingGrammar
+                    ? "Correcting grammar..."
+                    : isStreaming
+                      ? "Streaming translation..."
+                      : isTranslating
+                        ? "Translating..."
+                        : "Speaking..."}
                 </span>
               </div>
             </Badge>
