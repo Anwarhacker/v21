@@ -114,15 +114,15 @@ export function useSpeechRecognition(options: SpeechRecognitionOptions = {}): Sp
 
       console.log("[v0] Speech recognition result:", { finalTranscript, interimTranscript })
 
+      // Batch state updates to prevent multiple renders
       if (finalTranscript) {
-        setTranscript((prev) => {
-          const newTranscript = prev + finalTranscript
-          onResult?.(finalTranscript, true)
-          return newTranscript
-        })
+        setTranscript(finalTranscript) // Set only the new transcript, not accumulated
+        onResult?.(finalTranscript, true)
       }
-
-      setInterimTranscript(interimTranscript)
+      
+      if (interimTranscript) {
+        setInterimTranscript(interimTranscript)
+      }
     }
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {

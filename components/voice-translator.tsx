@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,12 +52,13 @@ interface OutputLanguage {
   text: string;
 }
 
-function VoiceTranslatorComponent() {
+const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
   const [showIntro, setShowIntro] = useState(true);
   const [inputText, setInputText] = useState("");
   const [inputLanguage, setInputLanguage] = useState("auto");
   const [outputLanguages, setOutputLanguages] = useState<OutputLanguage[]>([
     { code: "hi", name: "Hindi", text: "" },
+    { code: "kn", name: "Kannada", text: "" },
     { code: "mr", name: "Marathi", text: "" },
   ]);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -207,19 +208,36 @@ function VoiceTranslatorComponent() {
     },
   });
 
+  const lastTranscriptRef = useRef("");
+  const interimTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    if (transcript) {
-      console.log("[v0] Updating input text from final transcript:", transcript);
-      setInputText(prev => prev + transcript + " ");
+    if (transcript && transcript !== lastTranscriptRef.current) {
+      console.log(
+        "[v0] Updating input text from final transcript:",
+        transcript
+      );
+      lastTranscriptRef.current = transcript;
+      setInputText((prev) => prev + transcript + " ");
     }
   }, [transcript]);
 
+  // Debounce interim transcript updates
   useEffect(() => {
-    if (interimTranscript && isListening) {
-      console.log("[v0] Showing interim transcript:", interimTranscript);
-      // Don't update inputText with interim results to prevent multiple renders
+    if (interimTimeoutRef.current) {
+      clearTimeout(interimTimeoutRef.current);
     }
-  }, [interimTranscript, isListening]);
+
+    interimTimeoutRef.current = setTimeout(() => {
+      console.log("[v0] Interim transcript:", interimTranscript);
+    }, 100); // Debounce by 100ms
+
+    return () => {
+      if (interimTimeoutRef.current) {
+        clearTimeout(interimTimeoutRef.current);
+      }
+    };
+  }, [interimTranscript]);
 
   useEffect(() => {
     if (speechRecognitionError) {
@@ -415,40 +433,51 @@ function VoiceTranslatorComponent() {
     }
   };
 
-  const playAudio = useCallback((text: string, languageCode: string, index?: number) => {
-    if (!text.trim()) {
-      console.log("[v0] No text to play");
-      return;
-    }
-
-    console.log("[v0] Playing audio:", {
-      text,
-      languageCode,
-      index,
-      speechSpeed,
-    });
-
-    if (!isTTSSupported) {
-      const errorMsg = "Text-to-speech is not supported in this browser.";
-      console.log("[v0] TTS not supported:", errorMsg);
-      setSpeechError(errorMsg);
-      return;
-    }
-
-    // Stop current speech if playing
-    if (isSpeaking) {
-      console.log("[v0] Stopping current speech");
-      stopSpeaking();
-      if (currentPlayingIndex === index) {
-        setCurrentPlayingIndex(null);
+  const playAudio = useCallback(
+    (text: string, languageCode: string, index?: number) => {
+      if (!text.trim()) {
+        console.log("[v0] No text to play");
         return;
       }
-    }
 
-    setCurrentPlayingIndex(index ?? null);
-    setRate(speechSpeed);
-    speak(text, languageCode);
-  }, [isTTSSupported, isSpeaking, currentPlayingIndex, speechSpeed, stopSpeaking, setRate, speak]);
+      console.log("[v0] Playing audio:", {
+        text,
+        languageCode,
+        index,
+        speechSpeed,
+      });
+
+      if (!isTTSSupported) {
+        const errorMsg = "Text-to-speech is not supported in this browser.";
+        console.log("[v0] TTS not supported:", errorMsg);
+        setSpeechError(errorMsg);
+        return;
+      }
+
+      // Stop current speech if playing
+      if (isSpeaking) {
+        console.log("[v0] Stopping current speech");
+        stopSpeaking();
+        if (currentPlayingIndex === index) {
+          setCurrentPlayingIndex(null);
+          return;
+        }
+      }
+
+      setCurrentPlayingIndex(index ?? null);
+      setRate(speechSpeed);
+      speak(text, languageCode);
+    },
+    [
+      isTTSSupported,
+      isSpeaking,
+      currentPlayingIndex,
+      speechSpeed,
+      stopSpeaking,
+      setRate,
+      speak,
+    ]
+  );
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -565,26 +594,32 @@ function VoiceTranslatorComponent() {
 
   const swapLanguages = useCallback(() => {
     if (inputLanguage === "auto" || outputLanguages.length === 0) return;
-    
+
     const firstOutputLang = outputLanguages[0];
     const newInputLang = firstOutputLang.code;
     const newOutputLang = inputLanguage;
-    
+
     // Swap input language with first output language
     setInputLanguage(newInputLang);
-    setOutputLanguages(prev => [
-      { ...prev[0], code: newOutputLang, name: languages.find(l => l.code === newOutputLang)?.name || newOutputLang },
-      ...prev.slice(1)
+    setOutputLanguages((prev) => [
+      {
+        ...prev[0],
+        code: newOutputLang,
+        name:
+          languages.find((l) => l.code === newOutputLang)?.name ||
+          newOutputLang,
+      },
+      ...prev.slice(1),
     ]);
-    
+
     // Swap the text content as well
     const inputTextContent = inputText;
     const outputTextContent = firstOutputLang.text;
-    
+
     setInputText(outputTextContent);
-    setOutputLanguages(prev => [
+    setOutputLanguages((prev) => [
       { ...prev[0], text: inputTextContent },
-      ...prev.slice(1)
+      ...prev.slice(1),
     ]);
   }, [inputLanguage, outputLanguages, inputText, languages]);
 
@@ -620,11 +655,14 @@ function VoiceTranslatorComponent() {
                 <HistoryDialog />
                 <SettingsDialog />
               </div>
-              
+
               {/* Language Swap Section */}
               <div className="flex items-center gap-4 p-4 bg-card/50 backdrop-blur-sm rounded-xl border border-border/50">
                 <div className="flex items-center gap-2">
-                  <Select value={inputLanguage} onValueChange={setInputLanguage}>
+                  <Select
+                    value={inputLanguage}
+                    onValueChange={setInputLanguage}
+                  >
                     <SelectTrigger className="w-32 sm:w-36 bg-background/50 text-sm">
                       <SelectValue />
                     </SelectTrigger>
@@ -637,21 +675,23 @@ function VoiceTranslatorComponent() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <Button
                   onClick={swapLanguages}
                   variant="ghost"
                   size="sm"
-                  disabled={inputLanguage === "auto" || outputLanguages.length === 0}
+                  disabled={
+                    inputLanguage === "auto" || outputLanguages.length === 0
+                  }
                   className="p-2 hover:bg-primary/10 transition-all duration-200 hover:scale-110"
                   title="Swap languages"
                 >
                   <ArrowLeftRight className="h-4 w-4 text-primary" />
                 </Button>
-                
+
                 <div className="flex items-center gap-2">
-                  <Select 
-                    value={outputLanguages[0]?.code || "en"} 
+                  <Select
+                    value={outputLanguages[0]?.code || "en"}
                     onValueChange={(value) => updateOutputLanguage(0, value)}
                   >
                     <SelectTrigger className="w-32 sm:w-36 bg-background/50 text-sm">
@@ -1130,7 +1170,7 @@ function VoiceTranslatorComponent() {
       )}
     </div>
   );
-}
+});
 
 export const VoiceTranslator = dynamic(
   () => Promise.resolve(VoiceTranslatorComponent),
