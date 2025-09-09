@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,7 +51,7 @@ interface OutputLanguage {
   text: string;
 }
 
-export function VoiceTranslator() {
+function VoiceTranslatorComponent() {
   const [showIntro, setShowIntro] = useState(true);
   const [inputText, setInputText] = useState("");
   const [inputLanguage, setInputLanguage] = useState("auto");
@@ -566,6 +567,18 @@ export function VoiceTranslator() {
     setShowIntro(false);
   };
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
+    </div>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 relative overflow-hidden">
       {showIntro && <IntroSection onContinue={handleContinue} />}
@@ -1037,3 +1050,12 @@ export function VoiceTranslator() {
     </div>
   );
 }
+
+export const VoiceTranslator = dynamic(() => Promise.resolve(VoiceTranslatorComponent), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
+    </div>
+  ),
+});
