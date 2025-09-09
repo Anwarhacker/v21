@@ -36,6 +36,7 @@ import {
   BookOpen,
   Volume2,
   Sparkles,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
@@ -567,6 +568,31 @@ function VoiceTranslatorComponent() {
     setShowIntro(false);
   };
 
+  const swapLanguages = () => {
+    if (inputLanguage === "auto" || outputLanguages.length === 0) return;
+    
+    const firstOutputLang = outputLanguages[0];
+    const newInputLang = firstOutputLang.code;
+    const newOutputLang = inputLanguage;
+    
+    // Swap input language with first output language
+    setInputLanguage(newInputLang);
+    setOutputLanguages(prev => [
+      { ...prev[0], code: newOutputLang, name: languages.find(l => l.code === newOutputLang)?.name || newOutputLang },
+      ...prev.slice(1)
+    ]);
+    
+    // Swap the text content as well
+    const inputTextContent = inputText;
+    const outputTextContent = firstOutputLang.text;
+    
+    setInputText(outputTextContent);
+    setOutputLanguages(prev => [
+      { ...prev[0], text: inputTextContent },
+      ...prev.slice(1)
+    ]);
+  };
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -598,6 +624,55 @@ function VoiceTranslatorComponent() {
               <div className="flex items-center gap-2">
                 <HistoryDialog />
                 <SettingsDialog />
+              </div>
+              
+              {/* Language Swap Section */}
+              <div className="flex items-center gap-4 p-4 bg-card/50 backdrop-blur-sm rounded-xl border border-border/50">
+                <div className="flex items-center gap-2">
+                  <Select value={inputLanguage} onValueChange={setInputLanguage}>
+                    <SelectTrigger className="w-32 sm:w-36 bg-background/50 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang.code} value={lang.code}>
+                          {lang.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button
+                  onClick={swapLanguages}
+                  variant="ghost"
+                  size="sm"
+                  disabled={inputLanguage === "auto" || outputLanguages.length === 0}
+                  className="p-2 hover:bg-primary/10 transition-all duration-200 hover:scale-110"
+                  title="Swap languages"
+                >
+                  <ArrowLeftRight className="h-4 w-4 text-primary" />
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  <Select 
+                    value={outputLanguages[0]?.code || "en"} 
+                    onValueChange={(value) => updateOutputLanguage(0, value)}
+                  >
+                    <SelectTrigger className="w-32 sm:w-36 bg-background/50 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages
+                        .filter((lang) => lang.code !== "auto")
+                        .map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code}>
+                            {lang.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
