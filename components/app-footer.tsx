@@ -21,7 +21,7 @@ export function AppFooter() {
                 <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Voice Translator Team
+                Voice Translator Teammmmmmm
               </h3>
             </div>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto leading-relaxed px-4">
