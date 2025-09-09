@@ -1,6 +1,6 @@
 "use client";
 
-import { VoiceTranslator } from "@/components/voice-translator";
+import { VoiceTranslator } from "@/components/voice-translator-refactored";
 
 export default function Home() {
   return (
