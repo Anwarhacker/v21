@@ -27,9 +27,9 @@ interface TextToSpeechHook {
   error: string | null
 }
 
-// Language code mapping for speech synthesis
+// Language code mapping for speech synthesis with Indian accent preference
 const TTS_LANGUAGE_CODES: Record<string, string> = {
-  en: "en-US",
+  en: "en-IN", // Use Indian English accent
   es: "es-ES",
   fr: "fr-FR",
   de: "de-DE",
@@ -40,10 +40,22 @@ const TTS_LANGUAGE_CODES: Record<string, string> = {
   ko: "ko-KR",
   zh: "zh-CN",
   ar: "ar-SA",
+  hi: "hi-IN",
+  bn: "bn-IN",
+  ta: "ta-IN",
+  te: "te-IN",
+  mr: "mr-IN",
+  gu: "gu-IN",
+  kn: "kn-IN",
+  ml: "ml-IN",
+  pa: "pa-IN",
+  ur: "ur-IN",
+  or: "or-IN",
+  as: "as-IN",
 }
 
 export function useTextToSpeech(options: TextToSpeechOptions = {}): TextToSpeechHook {
-  const { rate = 1, pitch = 1, volume = 1, voice = null, onStart, onEnd, onError } = options
+  const { rate = 0.8, pitch = 1, volume = 1, voice = null, onStart, onEnd, onError } = options
 
   const [isSupported, setIsSupported] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -89,16 +101,40 @@ export function useTextToSpeech(options: TextToSpeechOptions = {}): TextToSpeech
         const utterance = new SpeechSynthesisUtterance(text)
         utteranceRef.current = utterance
 
-        // Set voice based on language or selected voice
+        // Set voice based on language or selected voice with Indian accent preference
         if (language && TTS_LANGUAGE_CODES[language]) {
           const langCode = TTS_LANGUAGE_CODES[language]
-          const languageVoice = voices.find(
-            (voice) => voice.lang.startsWith(langCode) || voice.lang.startsWith(language),
-          )
-          if (languageVoice) {
-            utterance.voice = languageVoice
+          
+          // For English, prefer Indian accent voices
+          if (language === 'en') {
+            const indianVoice = voices.find(
+              (voice) => voice.lang === 'en-IN' || 
+                        voice.name.toLowerCase().includes('indian') ||
+                        voice.name.toLowerCase().includes('india')
+            )
+            if (indianVoice) {
+              utterance.voice = indianVoice
+              utterance.lang = 'en-IN'
+            } else {
+              // Fallback to any English voice
+              const englishVoice = voices.find(
+                (voice) => voice.lang.startsWith('en')
+              )
+              if (englishVoice) {
+                utterance.voice = englishVoice
+                utterance.lang = englishVoice.lang
+              }
+            }
+          } else {
+            // For other languages, find appropriate voice
+            const languageVoice = voices.find(
+              (voice) => voice.lang.startsWith(langCode) || voice.lang.startsWith(language)
+            )
+            if (languageVoice) {
+              utterance.voice = languageVoice
+            }
+            utterance.lang = langCode
           }
-          utterance.lang = langCode
         } else if (selectedVoice) {
           utterance.voice = selectedVoice
           utterance.lang = selectedVoice.lang

@@ -72,7 +72,7 @@ function VoiceTranslatorComponent() {
   const [isCorrectingGrammar, setIsCorrectingGrammar] = useState(false);
   const [grammarCorrectionEnabled, setGrammarCorrectionEnabled] =
     useState(true);
-  const [speechSpeed, setSpeechSpeed] = useState(1);
+  const [speechSpeed, setSpeechSpeed] = useState(0.8); // Slower default speed for better comprehension
 
   const languages = [
     { code: "auto", name: "Auto-detect" },
@@ -574,9 +574,11 @@ function VoiceTranslatorComponent() {
   }, []);
 
   if (!mounted) {
-    return <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
-    </div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
+      </div>
+    );
   }
 
   return (
@@ -760,7 +762,7 @@ function VoiceTranslatorComponent() {
                           className="text-sm text-muted-foreground flex items-center gap-2"
                         >
                           <Volume2 className="h-4 w-4 text-primary" />
-                          Speech Speed:
+                          Speech Speed: {speechSpeed}x
                         </label>
                         <input
                           type="range"
@@ -774,6 +776,15 @@ function VoiceTranslatorComponent() {
                           }
                           className="flex-1 accent-primary"
                         />
+                        <span className="text-xs text-muted-foreground min-w-[3rem] text-right">
+                          {speechSpeed === 0.5
+                            ? "Slow"
+                            : speechSpeed === 1
+                            ? "Normal"
+                            : speechSpeed === 2
+                            ? "Fast"
+                            : "Custom"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -968,7 +979,7 @@ function VoiceTranslatorComponent() {
                               variant="outline"
                               size="sm"
                               disabled={!output.text || !isTTSSupported}
-                              className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
+                              className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2"
                             >
                               {currentPlayingIndex === index && isSpeaking ? (
                                 <>
@@ -987,7 +998,7 @@ function VoiceTranslatorComponent() {
                               variant="outline"
                               size="sm"
                               disabled={!output.text}
-                              className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
+                              className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2"
                             >
                               <Copy className="h-4 w-4 mr-2" />
                               Copy
@@ -1000,7 +1011,7 @@ function VoiceTranslatorComponent() {
                                 variant="outline"
                                 size="sm"
                                 disabled={!output.text}
-                                className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02]"
+                                className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2"
                               >
                                 <BookOpen className="h-4 w-4 mr-2" />
                                 Grammar
@@ -1051,11 +1062,14 @@ function VoiceTranslatorComponent() {
   );
 }
 
-export const VoiceTranslator = dynamic(() => Promise.resolve(VoiceTranslatorComponent), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
-    </div>
-  ),
-});
+export const VoiceTranslator = dynamic(
+  () => Promise.resolve(VoiceTranslatorComponent),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
+      </div>
+    ),
+  }
+);
