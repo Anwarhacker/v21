@@ -1,13 +1,24 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { ClickableText } from "@/components/clickable-text"
-import { GrammarAnalysisDialog } from "@/components/grammar-analysis-dialog"
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ClickableText } from "@/components/clickable-text";
+import { GrammarAnalysisDialog } from "@/components/grammar-analysis-dialog";
+import { IntroSection } from "@/components/intro-section";
+import { AppHeader } from "@/components/app-header";
+import { AppFooter } from "@/components/app-footer";
+import { QuickTips } from "@/components/quick-tips";
+import { StatusIndicator } from "@/components/status-indicator";
 import {
   Mic,
   MicOff,
@@ -20,50 +31,52 @@ import {
   Zap,
   RotateCcw,
   Globe,
-  Sparkles,
-  Volume2,
   Languages,
   BookOpen,
-  ArrowRight,
-  Brain,
-} from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
-import { useTextToSpeech } from "@/hooks/use-text-to-speech"
-import { useStreamingTranslation } from "@/hooks/use-streaming-translation"
-import { useTranslationHistory } from "@/hooks/use-translation-history"
-import { SettingsDialog } from "@/components/settings-dialog"
-import { HistoryDialog } from "@/components/history-dialog"
+  Volume2,
+  Sparkles,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
+import { useTextToSpeech } from "@/hooks/use-text-to-speech";
+import { useStreamingTranslation } from "@/hooks/use-streaming-translation";
+import { useTranslationHistory } from "@/hooks/use-translation-history";
+import { SettingsDialog } from "@/components/settings-dialog";
+import { HistoryDialog } from "@/components/history-dialog";
 
 interface OutputLanguage {
-  code: string
-  name: string
-  text: string
+  code: string;
+  name: string;
+  text: string;
 }
 
 export function VoiceTranslator() {
-  const [showIntro, setShowIntro] = useState(true)
-  const [inputText, setInputText] = useState("")
-  const [inputLanguage, setInputLanguage] = useState("auto")
+  const [showIntro, setShowIntro] = useState(true);
+  const [inputText, setInputText] = useState("");
+  const [inputLanguage, setInputLanguage] = useState("auto");
   const [outputLanguages, setOutputLanguages] = useState<OutputLanguage[]>([
-    { code: "es", name: "Spanish", text: "" },
-    { code: "fr", name: "French", text: "" },
-  ])
-  const [isTranslating, setIsTranslating] = useState(false)
-  const [translationError, setTranslationError] = useState<string | null>(null)
-  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null)
-  const [autoTranslate, setAutoTranslate] = useState(false)
-  const [speechError, setSpeechError] = useState<string | null>(null)
-  const [autoPlay, setAutoPlay] = useState(false)
-  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null)
-  const [streamingMode, setStreamingMode] = useState(false)
-  const [isCorrectingGrammar, setIsCorrectingGrammar] = useState(false)
-  const [grammarCorrectionEnabled, setGrammarCorrectionEnabled] = useState(true)
-  const [speechSpeed, setSpeechSpeed] = useState(1)
+    { code: "hi", name: "Hindi", text: "" },
+    { code: "mr", name: "Marathi", text: "" },
+  ]);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationError, setTranslationError] = useState<string | null>(null);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(
+    null
+  );
+  const [streamingMode, setStreamingMode] = useState(false);
+  const [isCorrectingGrammar, setIsCorrectingGrammar] = useState(false);
+  const [grammarCorrectionEnabled, setGrammarCorrectionEnabled] =
+    useState(true);
+  const [speechSpeed, setSpeechSpeed] = useState(1);
 
   const languages = [
     { code: "auto", name: "Auto-detect" },
     { code: "en", name: "English" },
+    { code: "hi", name: "Hindi" },
     { code: "es", name: "Spanish" },
     { code: "fr", name: "French" },
     { code: "de", name: "German" },
@@ -74,7 +87,7 @@ export function VoiceTranslator() {
     { code: "ko", name: "Korean" },
     { code: "zh", name: "Chinese" },
     { code: "ar", name: "Arabic" },
-    { code: "hi", name: "Hindi" },
+
     { code: "bn", name: "Bengali" },
     { code: "ta", name: "Tamil" },
     { code: "te", name: "Telugu" },
@@ -88,9 +101,9 @@ export function VoiceTranslator() {
     { code: "as", name: "Assamese" },
     { code: "ne", name: "Nepali" },
     { code: "si", name: "Sinhala" },
-  ]
+  ];
 
-  const { addEntry } = useTranslationHistory()
+  const { addEntry } = useTranslationHistory();
 
   const {
     isSupported: isSpeechSupported,
@@ -104,36 +117,43 @@ export function VoiceTranslator() {
   } = useSpeechRecognition({
     continuous: true,
     interimResults: true,
-    language: inputLanguage === "auto" ? "en-US" : `${inputLanguage}-${inputLanguage.toUpperCase()}`,
+    language:
+      inputLanguage === "auto"
+        ? "en-US"
+        : `${inputLanguage}-${inputLanguage.toUpperCase()}`,
     onResult: (transcript: string, isFinal: boolean) => {
-      console.log("[v0] Speech recognition result:", { transcript, isFinal, autoTranslate })
+      console.log("[v0] Speech recognition result:", {
+        transcript,
+        isFinal,
+        autoTranslate,
+      });
       if (isFinal) {
         setInputText((prev) => {
-          const newText = prev + transcript + " "
-          console.log("[v0] Updated input text:", newText)
-          return newText
-        })
+          const newText = prev + transcript + " ";
+          console.log("[v0] Updated input text:", newText);
+          return newText;
+        });
         if (autoTranslate) {
           setTimeout(() => {
-            console.log("[v0] Auto-translating after speech recognition")
+            console.log("[v0] Auto-translating after speech recognition");
             if (streamingMode) {
-              startStreamingTranslation()
+              startStreamingTranslation();
             } else {
-              translateText()
+              translateText();
             }
-          }, 1000) // Increased delay to 1 second for better stability
+          }, 1000); // Increased delay to 1 second for better stability
         }
       }
     },
     onError: (error: string) => {
-      console.log("[v0] Speech recognition error:", error)
-      setSpeechError(error)
+      console.log("[v0] Speech recognition error:", error);
+      setSpeechError(error);
     },
     onStart: () => {
-      console.log("[v0] Speech recognition started")
-      setSpeechError(null)
+      console.log("[v0] Speech recognition started");
+      setSpeechError(null);
     },
-  })
+  });
 
   const {
     isSupported: isTTSSupported,
@@ -150,13 +170,13 @@ export function VoiceTranslator() {
       // TTS started
     },
     onEnd: () => {
-      setCurrentPlayingIndex(null)
+      setCurrentPlayingIndex(null);
     },
     onError: (error: string) => {
-      setSpeechError(error)
-      setCurrentPlayingIndex(null)
+      setSpeechError(error);
+      setCurrentPlayingIndex(null);
     },
-  })
+  });
 
   const {
     isStreaming,
@@ -166,147 +186,175 @@ export function VoiceTranslator() {
     error: streamingError,
   } = useStreamingTranslation({
     onProgress: (language: string, text: string, isComplete: boolean) => {
-      setOutputLanguages((prev) => prev.map((output) => (output.code === language ? { ...output, text } : output)))
+      setOutputLanguages((prev) =>
+        prev.map((output) =>
+          output.code === language ? { ...output, text } : output
+        )
+      );
     },
     onComplete: (results: Record<string, string>) => {
       // Save to history
-      saveToHistory(results)
+      saveToHistory(results);
 
       // Auto-play first translation if enabled
       if (autoPlay && outputLanguages.length > 0) {
-        const firstLang = outputLanguages[0]
-        const firstResult = results[firstLang.code]
+        const firstLang = outputLanguages[0];
+        const firstResult = results[firstLang.code];
         if (firstResult) {
           setTimeout(() => {
-            playAudio(firstResult, firstLang.code, 0)
-          }, 500)
+            playAudio(firstResult, firstLang.code, 0);
+          }, 500);
         }
       }
     },
     onError: (error: string) => {
-      setTranslationError(error)
+      setTranslationError(error);
     },
-  })
+  });
 
   useEffect(() => {
     if (transcript || interimTranscript) {
-      const fullText = transcript + interimTranscript
-      console.log("[v0] Updating input text from speech:", { transcript, interimTranscript, fullText })
-      setInputText(fullText)
+      const fullText = transcript + interimTranscript;
+      console.log("[v0] Updating input text from speech:", {
+        transcript,
+        interimTranscript,
+        fullText,
+      });
+      setInputText(fullText);
     }
-  }, [transcript, interimTranscript])
+  }, [transcript, interimTranscript]);
 
   useEffect(() => {
     if (speechRecognitionError) {
-      console.log("[v0] Setting speech error:", speechRecognitionError)
-      setSpeechError(speechRecognitionError)
+      console.log("[v0] Setting speech error:", speechRecognitionError);
+      setSpeechError(speechRecognitionError);
     }
-  }, [speechRecognitionError])
+  }, [speechRecognitionError]);
 
   useEffect(() => {
     if (ttsError) {
-      console.log("[v0] Setting TTS error:", ttsError)
-      setSpeechError(ttsError)
+      console.log("[v0] Setting TTS error:", ttsError);
+      setSpeechError(ttsError);
     }
-  }, [ttsError])
+  }, [ttsError]);
 
   useEffect(() => {
     if (streamingError) {
-      console.log("[v0] Setting streaming error:", streamingError)
-      setTranslationError(streamingError)
+      console.log("[v0] Setting streaming error:", streamingError);
+      setTranslationError(streamingError);
     }
-  }, [streamingError])
+  }, [streamingError]);
 
   const toggleRecording = () => {
-    console.log("[v0] Toggle recording called:", { isListening, isSpeechSupported })
+    console.log("[v0] Toggle recording called:", {
+      isListening,
+      isSpeechSupported,
+    });
     if (isListening) {
-      stopListening()
+      stopListening();
     } else {
       if (!isSpeechSupported) {
-        const errorMsg = "Speech recognition is not supported in this browser. Please try Chrome, Edge, or Safari."
-        console.log("[v0] Speech not supported:", errorMsg)
-        setSpeechError(errorMsg)
-        return
+        const errorMsg =
+          "Speech recognition is not supported in this browser. Please try Chrome, Edge, or Safari.";
+        console.log("[v0] Speech not supported:", errorMsg);
+        setSpeechError(errorMsg);
+        return;
       }
-      setSpeechError(null)
-      setTranslationError(null)
-      resetTranscript()
-      setInputText("")
-      startListening()
+      setSpeechError(null);
+      setTranslationError(null);
+      resetTranscript();
+      setInputText("");
+      startListening();
     }
-  }
+  };
 
   const addOutputLanguage = () => {
     const availableLanguages = languages.filter(
-      (lang) => lang.code !== "auto" && !outputLanguages.some((output) => output.code === lang.code),
-    )
+      (lang) =>
+        lang.code !== "auto" &&
+        !outputLanguages.some((output) => output.code === lang.code)
+    );
 
     if (availableLanguages.length > 0) {
       setOutputLanguages([
         ...outputLanguages,
-        { code: availableLanguages[0].code, name: availableLanguages[0].name, text: "" },
-      ])
+        {
+          code: availableLanguages[0].code,
+          name: availableLanguages[0].name,
+          text: "",
+        },
+      ]);
     }
-  }
+  };
 
   const removeOutputLanguage = (index: number) => {
-    setOutputLanguages(outputLanguages.filter((_, i) => i !== index))
-  }
+    setOutputLanguages(outputLanguages.filter((_, i) => i !== index));
+  };
 
   const updateOutputLanguage = (index: number, code: string) => {
-    const language = languages.find((lang) => lang.code === code)
+    const language = languages.find((lang) => lang.code === code);
     if (language) {
-      const updated = [...outputLanguages]
-      updated[index] = { ...updated[index], code, name: language.name }
-      setOutputLanguages(updated)
+      const updated = [...outputLanguages];
+      updated[index] = { ...updated[index], code, name: language.name };
+      setOutputLanguages(updated);
     }
-  }
+  };
 
   const startStreamingTranslation = async () => {
     if (!inputText.trim()) {
-      console.log("[v0] No input text for streaming translation")
-      return
+      console.log("[v0] No input text for streaming translation");
+      return;
     }
 
-    console.log("[v0] Starting streaming translation:", { inputText, inputLanguage, outputLanguages })
-    setTranslationError(null)
+    console.log("[v0] Starting streaming translation:", {
+      inputText,
+      inputLanguage,
+      outputLanguages,
+    });
+    setTranslationError(null);
 
-    let textToTranslate = inputText
+    let textToTranslate = inputText;
     if (grammarCorrectionEnabled) {
-      textToTranslate = await correctGrammar(inputText)
+      textToTranslate = await correctGrammar(inputText);
       // Update input text with corrected version
       if (textToTranslate !== inputText) {
-        setInputText(textToTranslate)
+        setInputText(textToTranslate);
       }
     }
 
     // Clear existing translations
-    setOutputLanguages((prev) => prev.map((output) => ({ ...output, text: "" })))
+    setOutputLanguages((prev) =>
+      prev.map((output) => ({ ...output, text: "" }))
+    );
 
     startStreaming(
       textToTranslate, // Use corrected text
       inputLanguage,
-      outputLanguages.map((lang) => lang.code),
-    )
-  }
+      outputLanguages.map((lang) => lang.code)
+    );
+  };
 
   const translateText = async () => {
     if (!inputText.trim()) {
-      console.log("[v0] No input text for translation")
-      return
+      console.log("[v0] No input text for translation");
+      return;
     }
 
-    console.log("[v0] Starting translation:", { inputText, inputLanguage, outputLanguages })
-    setIsTranslating(true)
-    setTranslationError(null)
+    console.log("[v0] Starting translation:", {
+      inputText,
+      inputLanguage,
+      outputLanguages,
+    });
+    setIsTranslating(true);
+    setTranslationError(null);
 
     try {
-      let textToTranslate = inputText
+      let textToTranslate = inputText;
       if (grammarCorrectionEnabled) {
-        textToTranslate = await correctGrammar(inputText)
+        textToTranslate = await correctGrammar(inputText);
         // Update input text with corrected version
         if (textToTranslate !== inputText) {
-          setInputText(textToTranslate)
+          setInputText(textToTranslate);
         }
       }
 
@@ -321,99 +369,108 @@ export function VoiceTranslator() {
           outputLangs: outputLanguages.map((lang) => lang.code),
           stream: false,
         }),
-      })
+      });
 
-      const data = await response.json()
-      console.log("[v0] Translation response:", data)
+      const data = await response.json();
+      console.log("[v0] Translation response:", data);
 
       if (!response.ok) {
-        throw new Error(data.error || "Translation failed")
+        throw new Error(data.error || "Translation failed");
       }
 
       if (data.success && data.translations) {
         const updatedOutputs = outputLanguages.map((output) => {
-          const translation = data.translations.find((t: any) => t.language === output.code)
+          const translation = data.translations.find(
+            (t: any) => t.language === output.code
+          );
           return {
             ...output,
             text: translation?.text || "Translation not available",
-          }
-        })
+          };
+        });
 
-        console.log("[v0] Updated outputs:", updatedOutputs)
-        setOutputLanguages(updatedOutputs)
+        console.log("[v0] Updated outputs:", updatedOutputs);
+        setOutputLanguages(updatedOutputs);
 
         if (inputLanguage === "auto" && data.detectedLanguage) {
-          console.log("[v0] Detected language:", data.detectedLanguage)
-          setDetectedLanguage(data.detectedLanguage)
+          console.log("[v0] Detected language:", data.detectedLanguage);
+          setDetectedLanguage(data.detectedLanguage);
         }
 
         // Save to history
-        saveToHistory()
+        saveToHistory();
 
         // Auto-play first translation if enabled
         if (autoPlay && updatedOutputs.length > 0 && updatedOutputs[0].text) {
-          console.log("[v0] Auto-playing first translation")
+          console.log("[v0] Auto-playing first translation");
           setTimeout(() => {
-            playAudio(updatedOutputs[0].text, updatedOutputs[0].code, 0)
-          }, 500)
+            playAudio(updatedOutputs[0].text, updatedOutputs[0].code, 0);
+          }, 500);
         }
       }
     } catch (error) {
-      console.error("[v0] Translation error:", error)
-      setTranslationError(error instanceof Error ? error.message : "Translation failed")
+      console.error("[v0] Translation error:", error);
+      setTranslationError(
+        error instanceof Error ? error.message : "Translation failed"
+      );
     } finally {
-      setIsTranslating(false)
+      setIsTranslating(false);
     }
-  }
+  };
 
   const playAudio = (text: string, languageCode: string, index?: number) => {
     if (!text.trim()) {
-      console.log("[v0] No text to play")
-      return
+      console.log("[v0] No text to play");
+      return;
     }
 
-    console.log("[v0] Playing audio:", { text, languageCode, index, speechSpeed })
+    console.log("[v0] Playing audio:", {
+      text,
+      languageCode,
+      index,
+      speechSpeed,
+    });
 
     if (!isTTSSupported) {
-      const errorMsg = "Text-to-speech is not supported in this browser."
-      console.log("[v0] TTS not supported:", errorMsg)
-      setSpeechError(errorMsg)
-      return
+      const errorMsg = "Text-to-speech is not supported in this browser.";
+      console.log("[v0] TTS not supported:", errorMsg);
+      setSpeechError(errorMsg);
+      return;
     }
 
     // Stop current speech if playing
     if (isSpeaking) {
-      console.log("[v0] Stopping current speech")
-      stopSpeaking()
+      console.log("[v0] Stopping current speech");
+      stopSpeaking();
       if (currentPlayingIndex === index) {
-        setCurrentPlayingIndex(null)
-        return
+        setCurrentPlayingIndex(null);
+        return;
       }
     }
 
-    setCurrentPlayingIndex(index ?? null)
-    setRate(speechSpeed)
-    speak(text, languageCode)
-  }
+    setCurrentPlayingIndex(index ?? null);
+    setRate(speechSpeed);
+    speak(text, languageCode);
+  };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-  }
+    navigator.clipboard.writeText(text);
+  };
 
   const handleTranslate = () => {
     if (streamingMode) {
       if (isStreaming) {
-        stopStreaming()
+        stopStreaming();
       } else {
-        startStreamingTranslation()
+        startStreamingTranslation();
       }
     } else {
-      translateText()
+      translateText();
     }
-  }
+  };
 
   const saveToHistory = (results?: Record<string, string>) => {
-    if (!inputText.trim()) return
+    if (!inputText.trim()) return;
 
     const translations = outputLanguages
       .map((output) => ({
@@ -421,7 +478,7 @@ export function VoiceTranslator() {
         languageName: output.name,
         text: results ? results[output.code] || output.text : output.text,
       }))
-      .filter((t) => t.text && t.text.trim())
+      .filter((t) => t.text && t.text.trim());
 
     if (translations.length > 0) {
       addEntry({
@@ -429,45 +486,47 @@ export function VoiceTranslator() {
         inputLanguage,
         detectedLanguage,
         translations,
-      })
+      });
     }
-  }
+  };
 
   const resetAll = () => {
-    console.log("[v0] Resetting all state")
+    console.log("[v0] Resetting all state");
     // Stop any ongoing operations
     if (isListening) {
-      console.log("[v0] Stopping speech recognition")
-      stopListening()
+      console.log("[v0] Stopping speech recognition");
+      stopListening();
     }
     if (isSpeaking) {
-      console.log("[v0] Stopping TTS")
-      stopSpeaking()
+      console.log("[v0] Stopping TTS");
+      stopSpeaking();
     }
     if (isStreaming) {
-      console.log("[v0] Stopping streaming")
-      stopStreaming()
+      console.log("[v0] Stopping streaming");
+      stopStreaming();
     }
 
     // Clear all state
-    setInputText("")
-    resetTranscript()
-    setOutputLanguages((prev) => prev.map((output) => ({ ...output, text: "" })))
-    setTranslationError(null)
-    setSpeechError(null)
-    setDetectedLanguage(null)
-    setCurrentPlayingIndex(null)
-    setIsTranslating(false)
-    console.log("[v0] Reset complete")
-  }
+    setInputText("");
+    resetTranscript();
+    setOutputLanguages((prev) =>
+      prev.map((output) => ({ ...output, text: "" }))
+    );
+    setTranslationError(null);
+    setSpeechError(null);
+    setDetectedLanguage(null);
+    setCurrentPlayingIndex(null);
+    setIsTranslating(false);
+    console.log("[v0] Reset complete");
+  };
 
   const correctGrammar = async (text: string): Promise<string> => {
     if (!grammarCorrectionEnabled || !text.trim()) {
-      return text
+      return text;
     }
 
-    console.log("[v0] Starting grammar correction:", { text })
-    setIsCorrectingGrammar(true)
+    console.log("[v0] Starting grammar correction:", { text });
+    setIsCorrectingGrammar(true);
 
     try {
       const response = await fetch("/api/correct-grammar", {
@@ -476,201 +535,49 @@ export function VoiceTranslator() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ text }),
-      })
+      });
 
-      const data = await response.json()
-      console.log("[v0] Grammar correction response:", data)
+      const data = await response.json();
+      console.log("[v0] Grammar correction response:", data);
 
       if (!response.ok) {
-        throw new Error(data.error || "Grammar correction failed")
+        throw new Error(data.error || "Grammar correction failed");
       }
 
       if (data.success && data.correctedText) {
-        console.log("[v0] Grammar corrected:", { original: text, corrected: data.correctedText })
-        return data.correctedText
+        console.log("[v0] Grammar corrected:", {
+          original: text,
+          corrected: data.correctedText,
+        });
+        return data.correctedText;
       }
 
-      return text
+      return text;
     } catch (error) {
-      console.error("[v0] Grammar correction error:", error)
+      console.error("[v0] Grammar correction error:", error);
       // Return original text if correction fails
-      return text
+      return text;
     } finally {
-      setIsCorrectingGrammar(false)
+      setIsCorrectingGrammar(false);
     }
-  }
+  };
 
   const handleContinue = () => {
-    setShowIntro(false)
-  }
+    setShowIntro(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 relative overflow-hidden">
-      {showIntro && (
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-green-50 z-50 overflow-y-auto">
-          <div className="min-h-screen flex items-start justify-center p-4 py-8">
-            <div className="max-w-4xl mx-auto text-center space-y-8">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full text-emerald-700 text-sm font-medium">
-                  <Mic className="w-4 h-4" />
-                  AI-Powered Voice Translation
-                </div>
-                <h1 className="text-5xl font-bold text-gray-900 text-balance">Real-Time Voice Translator</h1>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto text-pretty">
-                  Break language barriers instantly with our advanced AI translator featuring speech recognition,
-                  grammar correction, and natural voice synthesis.
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                    <Mic className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Voice Recognition</h3>
-                  <p className="text-gray-600 text-sm">
-                    Real-time speech-to-text conversion with high accuracy across multiple languages
-                  </p>
-                </div>
-
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                    <Languages className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Multi-Language Support</h3>
-                  <p className="text-gray-600 text-sm">
-                    Support for 25+ languages including major Indian languages like Hindi, Tamil, Bengali
-                  </p>
-                </div>
-
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                    <Volume2 className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Natural Voice Synthesis</h3>
-                  <p className="text-gray-600 text-sm">
-                    High-quality text-to-speech with adjustable speed and natural pronunciation
-                  </p>
-                </div>
-
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                    <Zap className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Real-Time Streaming</h3>
-                  <p className="text-gray-600 text-sm">
-                    See translations appear word-by-word as you speak for instant communication
-                  </p>
-                </div>
-
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                    <BookOpen className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Grammar Correction</h3>
-                  <p className="text-gray-600 text-sm">
-                    AI-powered grammar and spelling correction before translation for better accuracy
-                  </p>
-                </div>
-
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 hover:shadow-lg transition-all duration-300">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                    <Brain className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Smart Analysis</h3>
-                  <p className="text-gray-600 text-sm">
-                    Grammatical analysis with parts of speech tagging and contextual word definitions
-                  </p>
-                </div>
-              </div>
-
-              <div
-                className="bg-gradient-to-r from-emerald-600 to-green-700 rounded-2xl p-8 mt-12"
-                style={{ backgroundColor: "#059669" }}
-              >
-                <h3 className="text-2xl font-bold mb-4" style={{ color: "#ffffff" }}>
-                  Advanced Features
-                </h3>
-                <div className="grid md:grid-cols-2 gap-6 text-left">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                      <span style={{ color: "#ffffff" }}>Auto-translate as you speak</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                      <span style={{ color: "#ffffff" }}>Translation history with export</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                      <span style={{ color: "#ffffff" }}>Customizable voice settings</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                      <span style={{ color: "#ffffff" }}>Clickable word definitions</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                      <span style={{ color: "#ffffff" }}>Multiple output languages</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                      <span style={{ color: "#ffffff" }}>Responsive design for all devices</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-8">
-                <button
-                  onClick={handleContinue}
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                >
-                  Get Started
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-                <p className="text-sm text-gray-500 mt-3">Start translating in seconds • No signup required</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {showIntro && <IntroSection onContinue={handleContinue} />}
 
       {!showIntro && (
         <>
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">{/* Background Elements */}</div>
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* Background Elements */}
+          </div>
 
           <div className="relative z-10 container mx-auto px-4 sm:px-6 max-w-7xl">
-            <div className="text-center py-8 sm:py-12 mb-8 animate-fade-in">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="p-3 bg-primary/10 rounded-2xl">
-                  <Globe className="h-8 w-8 text-primary" />
-                </div>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  Voice Translator
-                </h1>
-              </div>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 text-balance">
-                Break language barriers instantly with AI-powered real-time speech translation
-              </p>
-
-              <div className="flex flex-wrap justify-center gap-4 mb-8 animate-slide-up">
-                <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Real-time Translation</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
-                  <Volume2 className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Voice Recognition</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
-                  <Languages className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">25+ Languages</span>
-                </div>
-              </div>
-            </div>
+            <AppHeader />
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4 animate-slide-up">
               <div className="flex items-center gap-2">
@@ -697,7 +604,8 @@ export function VoiceTranslator() {
               <Alert className="mb-6 animate-scale-in">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Speech recognition is not supported in this browser. Voice input will not be available.
+                  Speech recognition is not supported in this browser. Voice
+                  input will not be available.
                 </AlertDescription>
               </Alert>
             )}
@@ -706,7 +614,8 @@ export function VoiceTranslator() {
               <Alert className="mb-6 animate-scale-in">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Text-to-speech is not supported in this browser. Audio playback will not be available.
+                  Text-to-speech is not supported in this browser. Audio
+                  playback will not be available.
                 </AlertDescription>
               </Alert>
             )}
@@ -719,15 +628,25 @@ export function VoiceTranslator() {
                       <div className="p-2 bg-primary/10 rounded-lg">
                         <Mic className="h-5 w-5 text-primary" />
                       </div>
-                      <h2 className="text-xl lg:text-2xl font-bold text-card-foreground">Input</h2>
+                      <h2 className="text-xl lg:text-2xl font-bold text-card-foreground">
+                        Input
+                      </h2>
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
                       {detectedLanguage && inputLanguage === "auto" && (
-                        <Badge variant="secondary" className="text-xs animate-scale-in">
-                          Detected: {languages.find((l) => l.code === detectedLanguage)?.name || detectedLanguage}
+                        <Badge
+                          variant="secondary"
+                          className="text-xs animate-scale-in"
+                        >
+                          Detected:{" "}
+                          {languages.find((l) => l.code === detectedLanguage)
+                            ?.name || detectedLanguage}
                         </Badge>
                       )}
-                      <Select value={inputLanguage} onValueChange={setInputLanguage}>
+                      <Select
+                        value={inputLanguage}
+                        onValueChange={setInputLanguage}
+                      >
                         <SelectTrigger className="w-full sm:w-44 bg-background/50">
                           <SelectValue />
                         </SelectTrigger>
@@ -763,7 +682,10 @@ export function VoiceTranslator() {
                           onChange={(e) => setAutoTranslate(e.target.checked)}
                           className="rounded border-border accent-primary"
                         />
-                        <label htmlFor="auto-translate" className="text-sm text-muted-foreground">
+                        <label
+                          htmlFor="auto-translate"
+                          className="text-sm text-muted-foreground"
+                        >
                           Auto-translate as I speak
                         </label>
                       </div>
@@ -776,7 +698,10 @@ export function VoiceTranslator() {
                           onChange={(e) => setAutoPlay(e.target.checked)}
                           className="rounded border-border accent-primary"
                         />
-                        <label htmlFor="auto-play" className="text-sm text-muted-foreground">
+                        <label
+                          htmlFor="auto-play"
+                          className="text-sm text-muted-foreground"
+                        >
                           Auto-play translated speech
                         </label>
                       </div>
@@ -786,10 +711,15 @@ export function VoiceTranslator() {
                           type="checkbox"
                           id="grammar-correction"
                           checked={grammarCorrectionEnabled}
-                          onChange={(e) => setGrammarCorrectionEnabled(e.target.checked)}
+                          onChange={(e) =>
+                            setGrammarCorrectionEnabled(e.target.checked)
+                          }
                           className="rounded border-border accent-primary"
                         />
-                        <label htmlFor="grammar-correction" className="text-sm text-muted-foreground">
+                        <label
+                          htmlFor="grammar-correction"
+                          className="text-sm text-muted-foreground"
+                        >
                           Auto-correct grammar & spelling
                         </label>
                       </div>
@@ -812,7 +742,10 @@ export function VoiceTranslator() {
                       </div>
 
                       <div className="flex items-center gap-3 sm:col-span-2">
-                        <label htmlFor="speech-speed" className="text-sm text-muted-foreground flex items-center gap-2">
+                        <label
+                          htmlFor="speech-speed"
+                          className="text-sm text-muted-foreground flex items-center gap-2"
+                        >
                           <Volume2 className="h-4 w-4 text-primary" />
                           Speech Speed:
                         </label>
@@ -823,7 +756,9 @@ export function VoiceTranslator() {
                           max="2"
                           step="0.1"
                           value={speechSpeed}
-                          onChange={(e) => setSpeechSpeed(Number.parseFloat(e.target.value))}
+                          onChange={(e) =>
+                            setSpeechSpeed(Number.parseFloat(e.target.value))
+                          }
                           className="flex-1 accent-primary"
                         />
                       </div>
@@ -854,7 +789,11 @@ export function VoiceTranslator() {
                     <div className="flex gap-3">
                       <Button
                         onClick={handleTranslate}
-                        disabled={!inputText.trim() || (isTranslating && !streamingMode) || isCorrectingGrammar}
+                        disabled={
+                          !inputText.trim() ||
+                          (isTranslating && !streamingMode) ||
+                          isCorrectingGrammar
+                        }
                         className="flex-1 h-12 font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                       >
                         {isCorrectingGrammar ? (
@@ -925,7 +864,9 @@ export function VoiceTranslator() {
                       <div className="p-2 bg-secondary/10 rounded-lg">
                         <Languages className="h-5 w-5 text-secondary" />
                       </div>
-                      <h2 className="text-xl lg:text-2xl font-bold text-card-foreground">Output</h2>
+                      <h2 className="text-xl lg:text-2xl font-bold text-card-foreground">
+                        Output
+                      </h2>
                     </div>
                     <Button
                       onClick={addOutputLanguage}
@@ -946,7 +887,12 @@ export function VoiceTranslator() {
                       >
                         <div className="space-y-4">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <Select value={output.code} onValueChange={(value) => updateOutputLanguage(index, value)}>
+                            <Select
+                              value={output.code}
+                              onValueChange={(value) =>
+                                updateOutputLanguage(index, value)
+                              }
+                            >
                               <SelectTrigger className="w-full sm:w-36 bg-background/50">
                                 <SelectValue />
                               </SelectTrigger>
@@ -954,7 +900,10 @@ export function VoiceTranslator() {
                                 {languages
                                   .filter((lang) => lang.code !== "auto")
                                   .map((lang) => (
-                                    <SelectItem key={lang.code} value={lang.code}>
+                                    <SelectItem
+                                      key={lang.code}
+                                      value={lang.code}
+                                    >
                                       {lang.name}
                                     </SelectItem>
                                   ))}
@@ -963,7 +912,10 @@ export function VoiceTranslator() {
 
                             <div className="flex items-center gap-2 self-start sm:self-auto">
                               {isStreaming && streamingResults[output.code] && (
-                                <Badge variant="secondary" className="text-xs animate-scale-in">
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs animate-scale-in"
+                                >
                                   <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                                     Streaming
@@ -983,15 +935,23 @@ export function VoiceTranslator() {
 
                           <div className="min-h-20 lg:min-h-24 p-4 bg-background/70 rounded-lg border border-border/50 text-sm lg:text-base">
                             {output.text ? (
-                              <ClickableText text={output.text} language={output.name} className="leading-relaxed" />
+                              <ClickableText
+                                text={output.text}
+                                language={output.name}
+                                className="leading-relaxed"
+                              />
                             ) : (
-                              <span className="text-muted-foreground italic">Translation will appear here...</span>
+                              <span className="text-muted-foreground italic">
+                                Translation will appear here...
+                              </span>
                             )}
                           </div>
 
                           <div className="flex flex-col sm:flex-row gap-2">
                             <Button
-                              onClick={() => playAudio(output.text, output.code, index)}
+                              onClick={() =>
+                                playAudio(output.text, output.code, index)
+                              }
                               variant="outline"
                               size="sm"
                               disabled={!output.text || !isTTSSupported}
@@ -1019,7 +979,10 @@ export function VoiceTranslator() {
                               <Copy className="h-4 w-4 mr-2" />
                               Copy
                             </Button>
-                            <GrammarAnalysisDialog text={output.text} language={output.name}>
+                            <GrammarAnalysisDialog
+                              text={output.text}
+                              language={output.name}
+                            >
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1041,7 +1004,9 @@ export function VoiceTranslator() {
                       <div className="p-4 bg-muted/30 rounded-2xl inline-block mb-4">
                         <Languages className="h-12 w-12 text-muted-foreground/50" />
                       </div>
-                      <p className="text-base lg:text-lg mb-4">No output languages selected</p>
+                      <p className="text-base lg:text-lg mb-4">
+                        No output languages selected
+                      </p>
                       <Button
                         onClick={addOutputLanguage}
                         variant="outline"
@@ -1056,151 +1021,19 @@ export function VoiceTranslator() {
               </Card>
             </div>
 
-            {(isTranslating || isSpeaking || isStreaming || isCorrectingGrammar) && (
-              <div className="fixed bottom-6 right-6 z-50 animate-scale-in">
-                <Badge
-                  variant="secondary"
-                  className="px-4 py-3 shadow-lg bg-card/90 backdrop-blur-sm border border-border/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                      <div className="absolute inset-0 w-2 h-2 bg-primary rounded-full animate-ping opacity-75" />
-                    </div>
-                    <span className="text-sm font-medium">
-                      {isCorrectingGrammar
-                        ? "Correcting grammar..."
-                        : isStreaming
-                          ? "Streaming translation..."
-                          : isTranslating
-                            ? "Translating..."
-                            : "Speaking..."}
-                    </span>
-                  </div>
-                </Badge>
-              </div>
-            )}
+            <StatusIndicator
+              isTranslating={isTranslating}
+              isSpeaking={isSpeaking}
+              isStreaming={isStreaming}
+              isCorrectingGrammar={isCorrectingGrammar}
+            />
 
-            <div className="mt-12 mb-8 animate-fade-in">
-              <Card className="p-6 lg:p-8 bg-card/50 border-0">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Quick Tips
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                    <p>Click the microphone to start voice input and speak clearly for best results</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                    <p>Enable auto-translate to get instant translations as you speak</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                    <p>Use streaming mode for real-time word-by-word translation</p>
-                  </div>
-                </div>
-              </Card>
-            </div>
+            <QuickTips />
 
-            <footer className="mt-16 mb-8">
-              <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-secondary/10 to-accent/5 rounded-3xl border border-primary/20 shadow-2xl backdrop-blur-sm">
-                <div className="absolute inset-0 gradient-mesh opacity-10" />
-                <div className="absolute top-0 left-1/4 w-32 h-32 bg-primary/20 rounded-full blur-3xl animate-float" />
-                <div
-                  className="absolute bottom-0 right-1/4 w-24 h-24 bg-secondary/20 rounded-full blur-2xl animate-float"
-                  style={{ animationDelay: "1s" }}
-                />
-
-                <div className="relative py-8 px-6">
-                  <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center gap-3 mb-4">
-                      <div className="p-3 bg-primary/10 rounded-2xl animate-glow">
-                        <Sparkles className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                        Voice Translator Team
-                      </h3>
-                    </div>
-                    <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                      Connecting cultures and breaking language barriers with cutting-edge AI technology
-                    </p>
-                  </div>
-
-                  <div className="relative mb-8">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent rounded-xl" />
-                    <div className="marquee-container group py-4 px-2">
-                      <div className="marquee-content">
-                        <span className="text-sm font-medium tracking-wide flex items-center gap-6">
-                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-                            <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                            <span className="text-primary font-semibold">Lead Developer:</span>
-                            <span className="text-foreground">Anwar Patel</span>
-                          </span>
-                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-secondary/10 rounded-full border border-secondary/20">
-                            <span className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
-                            <span className="text-secondary font-semibold">Core Contributors:</span>
-                            <span className="text-foreground">Goussoddin • Pooja Pasarge • Shreya Reddy</span>
-                          </span>
-                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full border border-accent/20">
-                            <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                            <span className="text-accent font-semibold">Special Thanks:</span>
-                            <span className="text-foreground">Open Source Community</span>
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pt-6 border-t border-primary/10">
-                    <div className="flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                          <Globe className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="font-medium">© 2024 Voice Translator</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full" />
-                        <span className="hover:text-primary transition-colors cursor-pointer">Open Source</span>
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full" />
-                        <span className="hover:text-primary transition-colors cursor-pointer">MIT License</span>
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full" />
-                        <span className="hover:text-primary transition-colors cursor-pointer">Privacy</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Badge
-                        variant="outline"
-                        className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 transition-colors"
-                      >
-                        <Globe className="h-3 w-3 mr-1" />
-                        25+ Languages
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="bg-secondary/5 border-secondary/20 text-secondary hover:bg-secondary/10 transition-colors"
-                      >
-                        <Zap className="h-3 w-3 mr-1" />
-                        Real-time AI
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="bg-accent/5 border-accent/20 text-accent hover:bg-accent/10 transition-colors"
-                      >
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        Grammar Check
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </footer>
+            <AppFooter />
           </div>
         </>
       )}
     </div>
-  )
+  );
 }
