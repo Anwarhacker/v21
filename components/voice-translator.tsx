@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -129,22 +129,15 @@ function VoiceTranslatorComponent() {
         isFinal,
         autoTranslate,
       });
-      if (isFinal) {
-        setInputText((prev) => {
-          const newText = prev + transcript + " ";
-          console.log("[v0] Updated input text:", newText);
-          return newText;
-        });
-        if (autoTranslate) {
-          setTimeout(() => {
-            console.log("[v0] Auto-translating after speech recognition");
-            if (streamingMode) {
-              startStreamingTranslation();
-            } else {
-              translateText();
-            }
-          }, 1000); // Increased delay to 1 second for better stability
-        }
+      if (isFinal && autoTranslate) {
+        setTimeout(() => {
+          console.log("[v0] Auto-translating after speech recognition");
+          if (streamingMode) {
+            startStreamingTranslation();
+          } else {
+            translateText();
+          }
+        }, 1000);
       }
     },
     onError: (error: string) => {
@@ -215,16 +208,18 @@ function VoiceTranslatorComponent() {
   });
 
   useEffect(() => {
-    if (transcript || interimTranscript) {
-      const fullText = transcript + interimTranscript;
-      console.log("[v0] Updating input text from speech:", {
-        transcript,
-        interimTranscript,
-        fullText,
-      });
-      setInputText(fullText);
+    if (transcript) {
+      console.log("[v0] Updating input text from final transcript:", transcript);
+      setInputText(prev => prev + transcript + " ");
     }
-  }, [transcript, interimTranscript]);
+  }, [transcript]);
+
+  useEffect(() => {
+    if (interimTranscript && isListening) {
+      console.log("[v0] Showing interim transcript:", interimTranscript);
+      // Don't update inputText with interim results to prevent multiple renders
+    }
+  }, [interimTranscript, isListening]);
 
   useEffect(() => {
     if (speechRecognitionError) {
@@ -420,7 +415,7 @@ function VoiceTranslatorComponent() {
     }
   };
 
-  const playAudio = (text: string, languageCode: string, index?: number) => {
+  const playAudio = useCallback((text: string, languageCode: string, index?: number) => {
     if (!text.trim()) {
       console.log("[v0] No text to play");
       return;
@@ -453,7 +448,7 @@ function VoiceTranslatorComponent() {
     setCurrentPlayingIndex(index ?? null);
     setRate(speechSpeed);
     speak(text, languageCode);
-  };
+  }, [isTTSSupported, isSpeaking, currentPlayingIndex, speechSpeed, stopSpeaking, setRate, speak]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -568,7 +563,7 @@ function VoiceTranslatorComponent() {
     setShowIntro(false);
   };
 
-  const swapLanguages = () => {
+  const swapLanguages = useCallback(() => {
     if (inputLanguage === "auto" || outputLanguages.length === 0) return;
     
     const firstOutputLang = outputLanguages[0];
@@ -591,7 +586,7 @@ function VoiceTranslatorComponent() {
       { ...prev[0], text: inputTextContent },
       ...prev.slice(1)
     ]);
-  };
+  }, [inputLanguage, outputLanguages, inputText, languages]);
 
   const [mounted, setMounted] = useState(false);
 
@@ -946,7 +941,7 @@ function VoiceTranslatorComponent() {
                         </div>
                         Listening for speech...
                       </div>
-                      {interimTranscript && (
+                      {interimTranscript && isListening && (
                         <div className="text-sm text-muted-foreground italic p-3 bg-background/50 rounded border border-border/50">
                           "{interimTranscript}"
                         </div>
