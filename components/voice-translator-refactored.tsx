@@ -39,10 +39,13 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [autoPlay, setAutoPlay] = useState(false);
-  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null);
+  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(
+    null
+  );
   const [streamingMode, setStreamingMode] = useState(false);
   const [isCorrectingGrammar, setIsCorrectingGrammar] = useState(false);
-  const [grammarCorrectionEnabled, setGrammarCorrectionEnabled] = useState(true);
+  const [grammarCorrectionEnabled, setGrammarCorrectionEnabled] =
+    useState(true);
   const [speechSpeed, setSpeechSpeed] = useState(0.8);
   const [mounted, setMounted] = useState(false);
 
@@ -89,7 +92,10 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
   } = useSpeechRecognition({
     continuous: true,
     interimResults: true,
-    language: inputLanguage === "auto" ? "en-US" : `${inputLanguage}-${inputLanguage.toUpperCase()}`,
+    language:
+      inputLanguage === "auto"
+        ? "en-US"
+        : `${inputLanguage}-${inputLanguage.toUpperCase()}`,
     onResult: (transcript: string, isFinal: boolean) => {
       if (isFinal && autoTranslate) {
         setTimeout(() => {
@@ -132,7 +138,9 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
   } = useStreamingTranslation({
     onProgress: (language: string, text: string) => {
       setOutputLanguages((prev) =>
-        prev.map((output) => (output.code === language ? { ...output, text } : output))
+        prev.map((output) =>
+          output.code === language ? { ...output, text } : output
+        )
       );
     },
     onComplete: (results: Record<string, string>) => {
@@ -215,8 +223,13 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
 
       if (data.success && data.translations) {
         const updatedOutputs = outputLanguages.map((output) => {
-          const translation = data.translations.find((t: any) => t.language === output.code);
-          return { ...output, text: translation?.text || "Translation not available" };
+          const translation = data.translations.find(
+            (t: any) => t.language === output.code
+          );
+          return {
+            ...output,
+            text: translation?.text || "Translation not available",
+          };
         });
 
         setOutputLanguages(updatedOutputs);
@@ -226,11 +239,16 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
 
         saveToHistory();
         if (autoPlay && updatedOutputs.length > 0 && updatedOutputs[0].text) {
-          setTimeout(() => playAudio(updatedOutputs[0].text, updatedOutputs[0].code, 0), 500);
+          setTimeout(
+            () => playAudio(updatedOutputs[0].text, updatedOutputs[0].code, 0),
+            500
+          );
         }
       }
     } catch (error) {
-      setTranslationError(error instanceof Error ? error.message : "Translation failed");
+      setTranslationError(
+        error instanceof Error ? error.message : "Translation failed"
+      );
     } finally {
       setIsTranslating(false);
     }
@@ -248,7 +266,8 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Grammar correction failed");
+      if (!response.ok)
+        throw new Error(data.error || "Grammar correction failed");
       return data.success && data.correctedText ? data.correctedText : text;
     } catch (error) {
       return text;
@@ -267,23 +286,40 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
       if (textToTranslate !== inputText) setInputText(textToTranslate);
     }
 
-    setOutputLanguages((prev) => prev.map((output) => ({ ...output, text: "" })));
-    startStreaming(textToTranslate, inputLanguage, outputLanguages.map((lang) => lang.code));
+    setOutputLanguages((prev) =>
+      prev.map((output) => ({ ...output, text: "" }))
+    );
+    startStreaming(
+      textToTranslate,
+      inputLanguage,
+      outputLanguages.map((lang) => lang.code)
+    );
   };
 
-  const playAudio = useCallback((text: string, languageCode: string, index?: number) => {
-    if (!text.trim() || !isTTSSupported) return;
-    if (isSpeaking) {
-      stopSpeaking();
-      if (currentPlayingIndex === index) {
-        setCurrentPlayingIndex(null);
-        return;
+  const playAudio = useCallback(
+    (text: string, languageCode: string, index?: number) => {
+      if (!text.trim() || !isTTSSupported) return;
+      if (isSpeaking) {
+        stopSpeaking();
+        if (currentPlayingIndex === index) {
+          setCurrentPlayingIndex(null);
+          return;
+        }
       }
-    }
-    setCurrentPlayingIndex(index ?? null);
-    setRate(speechSpeed);
-    speak(text, languageCode);
-  }, [isTTSSupported, isSpeaking, currentPlayingIndex, speechSpeed, stopSpeaking, setRate, speak]);
+      setCurrentPlayingIndex(index ?? null);
+      setRate(speechSpeed);
+      speak(text, languageCode);
+    },
+    [
+      isTTSSupported,
+      isSpeaking,
+      currentPlayingIndex,
+      speechSpeed,
+      stopSpeaking,
+      setRate,
+      speak,
+    ]
+  );
 
   const swapLanguages = useCallback(() => {
     if (inputLanguage === "auto" || outputLanguages.length === 0) return;
@@ -292,17 +328,23 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
     const newOutputLang = inputLanguage;
 
     setInputLanguage(newInputLang);
-    setOutputLanguages(prev => [
-      { ...prev[0], code: newOutputLang, name: languages.find(l => l.code === newOutputLang)?.name || newOutputLang },
-      ...prev.slice(1)
+    setOutputLanguages((prev) => [
+      {
+        ...prev[0],
+        code: newOutputLang,
+        name:
+          languages.find((l) => l.code === newOutputLang)?.name ||
+          newOutputLang,
+      },
+      ...prev.slice(1),
     ]);
 
     const inputTextContent = inputText;
     const outputTextContent = firstOutputLang.text;
     setInputText(outputTextContent);
-    setOutputLanguages(prev => [
+    setOutputLanguages((prev) => [
       { ...prev[0], text: inputTextContent },
-      ...prev.slice(1)
+      ...prev.slice(1),
     ]);
   }, [inputLanguage, outputLanguages, inputText, languages]);
 
@@ -338,7 +380,9 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
 
     setInputText("");
     resetTranscript();
-    setOutputLanguages((prev) => prev.map((output) => ({ ...output, text: "" })));
+    setOutputLanguages((prev) =>
+      prev.map((output) => ({ ...output, text: "" }))
+    );
     setTranslationError(null);
     setSpeechError(null);
     setDetectedLanguage(null);
@@ -348,12 +392,18 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
 
   const addOutputLanguage = () => {
     const availableLanguages = languages.filter(
-      (lang) => lang.code !== "auto" && !outputLanguages.some((output) => output.code === lang.code)
+      (lang) =>
+        lang.code !== "auto" &&
+        !outputLanguages.some((output) => output.code === lang.code)
     );
     if (availableLanguages.length > 0) {
       setOutputLanguages([
         ...outputLanguages,
-        { code: availableLanguages[0].code, name: availableLanguages[0].name, text: "" },
+        {
+          code: availableLanguages[0].code,
+          name: availableLanguages[0].name,
+          text: "",
+        },
       ]);
     }
   };
@@ -397,14 +447,14 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-muted/50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-muted/50 relative overflow-hidden">
       {showIntro && <IntroSection onContinue={() => setShowIntro(false)} />}
 
       {!showIntro && (
@@ -496,11 +546,14 @@ const VoiceTranslatorComponent = memo(function VoiceTranslatorComponent() {
   );
 });
 
-export const VoiceTranslator = dynamic(() => Promise.resolve(VoiceTranslatorComponent), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
-    </div>
-  ),
-});
+export const VoiceTranslator = dynamic(
+  () => Promise.resolve(VoiceTranslatorComponent),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
+      </div>
+    ),
+  }
+);

@@ -63,7 +63,7 @@ export function OutputSection({
   onCopyToClipboard,
 }: OutputSectionProps) {
   return (
-    <Card className="p-6 lg:p-8 shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+    <Card className="p-6 lg:p-8 border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 rounded-2xl">
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export function OutputSection({
           {outputLanguages.map((output, index) => (
             <Card
               key={index}
-              className="p-4 lg:p-5 bg-background/30 border border-border/50 hover:bg-background/50 transition-all duration-200 animate-slide-up"
+              className="p-4 lg:p-5 bg-secondary/10 border-2 border-border hover:bg-secondary/20 hover:border-primary/30 transition-all duration-200 animate-slide-up rounded-xl"
             >
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -131,7 +131,7 @@ export function OutputSection({
                   </div>
                 </div>
 
-                <div className="min-h-20 lg:min-h-24 p-4 bg-background/70 rounded-lg border border-border/50 text-sm lg:text-base">
+                <div className="min-h-20 lg:min-h-24 p-4 bg-background/80 rounded-xl border-2 border-border text-sm lg:text-base">
                   {output.text ? (
                     <ClickableText
                       text={output.text}
@@ -151,7 +151,7 @@ export function OutputSection({
                     variant="outline"
                     size="sm"
                     disabled={!output.text || !isTTSSupported}
-                    className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2"
+                    className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2 rounded-xl"
                   >
                     {currentPlayingIndex === index && isSpeaking ? (
                       <>
@@ -170,7 +170,7 @@ export function OutputSection({
                     variant="outline"
                     size="sm"
                     disabled={!output.text}
-                    className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2"
+                    className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2 rounded-xl"
                   >
                     <Copy className="h-4 w-4 mr-2" />
                     Copy
@@ -180,7 +180,7 @@ export function OutputSection({
                       variant="outline"
                       size="sm"
                       disabled={!output.text}
-                      className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2"
+                      className="flex-1 sm:flex-none bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] py-2 rounded-xl"
                     >
                       <BookOpen className="h-4 w-4 mr-2" />
                       Grammar

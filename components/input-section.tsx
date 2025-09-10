@@ -83,7 +83,7 @@ export function InputSection({
   onReset,
 }: InputSectionProps) {
   return (
-    <Card className="p-6 lg:p-8 shadow-lg border-0 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+    <Card className="p-6 lg:p-8 border-2 border-border bg-card hover:border-primary/50 transition-all duration-300 rounded-2xl">
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -121,10 +121,10 @@ export function InputSection({
           placeholder="Type or speak your text here..."
           value={inputText}
           onChange={(e) => onInputTextChange(e.target.value)}
-          className="min-h-32 lg:min-h-40 resize-none text-base bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+          className="min-h-32 lg:min-h-40 resize-none text-base bg-background/60 border-border/40 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all rounded-xl"
         />
 
-        <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border/50">
+        <div className="space-y-3 p-4 bg-secondary/20 rounded-xl border-2 border-border">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             Smart Features
@@ -231,7 +231,7 @@ export function InputSection({
             onClick={onToggleRecording}
             variant={isListening ? "destructive" : "default"}
             size="lg"
-            className="w-full h-14 text-base font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full h-14 text-base font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] rounded-xl"
             disabled={!isSpeechSupported}
           >
             {isListening ? (
@@ -255,7 +255,7 @@ export function InputSection({
                 (isTranslating && !streamingMode) ||
                 isCorrectingGrammar
               }
-              className="flex-1 h-12 font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="flex-1 h-12 font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] rounded-xl"
             >
               {isCorrectingGrammar ? (
                 <>
@@ -290,7 +290,7 @@ export function InputSection({
             <Button
               onClick={onReset}
               variant="outline"
-              className="px-6 h-12 font-semibold bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="px-6 h-12 font-semibold bg-background/50 hover:bg-background transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] rounded-xl"
               title="Reset all inputs and outputs"
             >
               <RotateCcw className="h-4 w-4 mr-2" />
@@ -300,7 +300,7 @@ export function InputSection({
         </div>
 
         {isListening && (
-          <div className="space-y-3 p-4 bg-primary/5 border border-primary/20 rounded-lg animate-scale-in">
+          <div className="space-y-3 p-4 bg-primary/10 border border-primary/30 rounded-xl animate-scale-in shadow-sm">
             <div className="flex items-center gap-3 text-sm font-medium text-primary">
               <div className="relative">
                 <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />

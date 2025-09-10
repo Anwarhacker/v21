@@ -39,7 +39,7 @@ export function LanguageSwapSection({
   onSwapLanguages,
 }: LanguageSwapSectionProps) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-card/50 backdrop-blur-sm rounded-xl border border-border/50">
+    <div className="flex items-center gap-4 p-4 bg-card rounded-2xl border-2 border-border">
       <div className="flex items-center gap-2">
         <Select value={inputLanguage} onValueChange={onInputLanguageChange}>
           <SelectTrigger className="w-32 sm:w-36 bg-background/50 text-sm">
